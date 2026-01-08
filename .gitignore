@@ -1,1 +1,6 @@
 **/build/
+**/test/
+
+*.md
+!README.md
+!readme.md
