@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.20)
 project(sandbox C)
-
+# recommend using vcpkg directly
 find_package(raylib REQUIRED)
 
 add_executable(${PROJECT_NAME} 
