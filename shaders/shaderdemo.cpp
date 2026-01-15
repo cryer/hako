@@ -32,8 +32,8 @@ int main()
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
-    // change effect shaders here
-    Shader ourShader("shaders/effect1.vs", "shaders/effect1.fs");
+    // change effect fragment shaders here
+    Shader ourShader("shaders/base.vs", "shaders/effect1.fs");
 
     float vertices[] = {   
         -1.0f,  1.0f, 0.0f, 
