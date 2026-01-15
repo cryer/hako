@@ -10,3 +10,6 @@
 ![](https://github.com/cryer/hako/raw/master/docs/res/effect1.gif)
 
 
+### effect2
+
+![](https://github.com/cryer/hako/raw/master/docs/res/effect2.gif)
