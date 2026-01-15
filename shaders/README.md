@@ -13,3 +13,7 @@
 ### effect2
 
 ![](https://github.com/cryer/hako/raw/master/docs/res/effect2.gif)
+
+### effect3
+
+![](https://github.com/cryer/hako/raw/master/docs/res/effect3.gif)
