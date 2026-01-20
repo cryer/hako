@@ -20,3 +20,11 @@ Grid based and manually customized "physics“
 ### demo
 
 ![](https://github.com/cryer/hako/raw/master/docs/res/demo.gif)
+
+### blog
+
+了解更多流体仿真，查看我的博客:
+
+[流体基础](https://cryer.github.io/2018/11/fluidnotes/)
+
+[SPH流体仿真实现](https://cryer.github.io/2018/12/fluids/)
