@@ -1,0 +1,1006 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://cryer.github.io/hako/wiki/shaders/">
+      
+      
+        <link rel="prev" href="../unique/">
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>着色器 - Hako</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#_1" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Hako" class="md-header__button md-logo" aria-label="Hako" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Hako
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              着色器
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Hako" class="md-nav__button md-logo" aria-label="Hako" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Hako
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../unique/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    标准库unique
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    着色器
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    着色器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        片段着色器
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        关键点解析
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        类似着色器通用原理
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="类似着色器通用原理">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第一部分：底层技术原理
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第一部分：底层技术原理">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-raymarching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 核心机制：光线步进 (Raymarching)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-volumetric-accumulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 这里的特殊技巧：体积累积 (Volumetric Accumulation)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-space-foldingdomain-repetition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 空间折叠 (Space Folding/Domain Repetition)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第二部分：如何自己写出这种效果？（标准流程）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第二部分：如何自己写出这种效果？（标准流程）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1: 建立坐标系 (Setup)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-define-geometry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2: 编写距离函数 (Define Geometry)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-the-loop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3: 步进循环 (The Loop)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4-coloring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 4: 调色 (Coloring)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-5-post-processing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 5: 色调映射 (Post-processing)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第三部分：新例子
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第三部分：新例子">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cyber-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        例子 ：赛博矩阵 (Cyber Matrix)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        片段着色器
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        关键点解析
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        类似着色器通用原理
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="类似着色器通用原理">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第一部分：底层技术原理
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第一部分：底层技术原理">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-raymarching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 核心机制：光线步进 (Raymarching)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-volumetric-accumulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 这里的特殊技巧：体积累积 (Volumetric Accumulation)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-space-foldingdomain-repetition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 空间折叠 (Space Folding/Domain Repetition)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第二部分：如何自己写出这种效果？（标准流程）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第二部分：如何自己写出这种效果？（标准流程）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1: 建立坐标系 (Setup)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-define-geometry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2: 编写距离函数 (Define Geometry)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-the-loop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3: 步进循环 (The Loop)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4-coloring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 4: 调色 (Coloring)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-5-post-processing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 5: 色调映射 (Post-processing)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第三部分：新例子
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第三部分：新例子">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cyber-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        例子 ：赛博矩阵 (Cyber Matrix)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+  <h1>着色器</h1>
+
+<p>非常经典的Raymarching（光线步进）效果，通常被称为"Tweetcart"风格的代码，因为它被压缩得很短以适应推特字数限制。</p>
+<p>为了在标准的OpenGL (C++) 环境中复刻这个效果，我们需要做两件事：</p>
+<ol>
+<li><strong>解压 (De-obfuscate) GLSL代码</strong>：将压缩的单行代码还原成标准、可读的GLSL语法，并适配标准OpenGL的坐标系。</li>
+<li><strong>编写C++宿主程序</strong>：设置全屏四边形渲染，并传入<code>iTime</code>和<code>iResolution</code>。</li>
+</ol>
+<h4 id="_1">片段着色器<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h4>
+<p>利用了特定的数学巧合和向量旋转公式。</p>
+<div class="highlight"><pre><span></span><code><span class="cp">#version 330 core</span>
+<span class="k">out</span><span class="w"> </span><span class="kt">vec4</span><span class="w"> </span><span class="n">FragColor</span><span class="p">;</span>
+
+<span class="k">uniform</span><span class="w"> </span><span class="kt">vec2</span><span class="w"> </span><span class="n">iResolution</span><span class="p">;</span><span class="w"> </span>
+<span class="k">uniform</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">iTime</span><span class="p">;</span><span class="w">    </span>
+
+<span class="kt">void</span><span class="w"> </span><span class="n">main</span><span class="p">()</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="c1">// 初始化输出颜色 o</span>
+<span class="w">    </span><span class="kt">vec4</span><span class="w"> </span><span class="n">o</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">vec4</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// 标准化UV坐标，中心为(0,0)</span>
+<span class="w">    </span><span class="kt">vec2</span><span class="w"> </span><span class="n">uv</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nb">gl_FragCoord</span><span class="p">.</span><span class="n">xy</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">iResolution</span><span class="p">.</span><span class="n">xy</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.5</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">iResolution</span><span class="p">.</span><span class="n">y</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">vec3</span><span class="w"> </span><span class="n">rayDir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">normalize</span><span class="p">(</span><span class="kt">vec3</span><span class="p">(</span><span class="n">uv</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mf">1.0</span><span class="p">));</span>
+
+<span class="w">    </span><span class="c1">// 初始化变量</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">z</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="c1">// 射线行进距离</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="c1">// 迭代次数</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">iTime</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1">// 主循环</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">50.0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// 计算当前空间点 p</span>
+<span class="w">        </span><span class="kt">vec3</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">z</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">rayDir</span><span class="p">;</span>
+<span class="w">        </span><span class="n">p</span><span class="p">.</span><span class="n">z</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mf">7.0</span><span class="p">;</span><span class="w"> </span><span class="c1">// 相机偏移</span>
+
+<span class="w">        </span><span class="c1">// 初始化累加向量 a</span>
+<span class="w">        </span><span class="kt">vec3</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">vec3</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
+<span class="w">        </span><span class="n">a</span><span class="p">.</span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0</span><span class="p">;</span><span class="w"> </span>
+
+<span class="w">        </span><span class="c1">// 旋转与形变核心逻辑</span>
+<span class="w">        </span><span class="kt">float</span><span class="w"> </span><span class="n">h</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">length</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">t</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">float</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sin</span><span class="p">(</span><span class="n">h</span><span class="p">);</span>
+<span class="w">        </span><span class="kt">float</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cos</span><span class="p">(</span><span class="n">h</span><span class="p">);</span>
+
+<span class="w">        </span><span class="c1">// 这是一个非常紧凑的罗德里格旋转公式变体</span>
+<span class="w">        </span><span class="c1">// mix(x, y, a) = x*(1-a) + y*a</span>
+<span class="w">        </span><span class="kt">vec3</span><span class="w"> </span><span class="n">dotPart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dot</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">a</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">vec3</span><span class="w"> </span><span class="n">crossPart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cross</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">p</span><span class="p">);</span>
+<span class="w">        </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mix</span><span class="p">(</span><span class="n">dotPart</span><span class="p">,</span><span class="w"> </span><span class="n">p</span><span class="p">,</span><span class="w"> </span><span class="n">s</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">crossPart</span><span class="p">;</span>
+
+<span class="w">        </span><span class="c1">// 内部细节循环 (FBM-like 结构)</span>
+<span class="w">        </span><span class="c1">// 注意：原代码 d 从 0 开始自增，第一次循环体内 d 为 1</span>
+<span class="w">        </span><span class="kt">float</span><span class="w"> </span><span class="n">d_loop</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">float</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mf">9.0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">a</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">sin</span><span class="p">(</span><span class="n">round</span><span class="p">(</span><span class="n">a</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">t</span><span class="p">).</span><span class="n">zxy</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">j</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="c1">// 计算步进距离 (Density/Distance)</span>
+<span class="w">        </span><span class="kt">float</span><span class="w"> </span><span class="n">d_step</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.1</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">length</span><span class="p">(</span><span class="n">a</span><span class="p">.</span><span class="n">xz</span><span class="p">);</span>
+<span class="w">        </span><span class="n">z</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">d_step</span><span class="p">;</span>
+
+<span class="w">        </span><span class="c1">// 颜色累加</span>
+<span class="w">        </span><span class="c1">// 红色通道固定，绿色随深度增加，蓝色随迭代次数增加(产生发光感)</span>
+<span class="w">        </span><span class="c1">// 除以 d_step 产生体积光效果（密度越大，d_step越小，颜色越亮）</span>
+<span class="w">        </span><span class="c1">// 防止除以0 (虽然在此数学模型下极少发生)</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">d_step</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">0.0001</span><span class="p">)</span><span class="w"> </span><span class="n">d_step</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0001</span><span class="p">;</span>
+<span class="w">        </span><span class="n">o</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="kt">vec4</span><span class="p">(</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="n">z</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">d_step</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// 色调映射</span>
+<span class="w">    </span><span class="c1">// tanh 将高动态范围的值压缩到 [0,1]</span>
+<span class="w">    </span><span class="n">o</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tanh</span><span class="p">(</span><span class="n">o</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">10000.0</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">FragColor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">o</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<h3 id="_2">关键点解析<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>坐标系转换</strong>：原代码使用了 <code>FC.rgb*2.-r.xyy</code> 这种极度压缩的写法来归一化坐标。在标准GLSL中，我们将其转换为 <code>(gl_FragCoord.xy - 0.5 * res) / res.y</code>，并显式指定射线方向为 <code>vec3(uv, -1.0)</code>。</li>
+<li><strong>迭代与累加</strong>：</li>
+<li><code>z</code> 代表光线向前走的距离。</li>
+<li><code>a</code> 是一个累加向量，通过 <code>sin</code> 和 <code>cross</code> 不断旋转扭曲，模拟流体的混沌感。</li>
+<li><code>d</code> (代码中的 <code>stepDist</code>) 是根据 <code>a</code> 的 XZ 平面长度决定的。这是一种类似于距离场（SDF）但用于体积光渲染的技巧。</li>
+<li><strong>颜色构成</strong>：</li>
+<li><code>vec4(3, z, i, 1)</code>：红色分量固定为3，绿色分量随深度 <code>z</code> 增加，蓝色分量随迭代 <code>i</code> 增加。</li>
+<li>由于 <code>i</code> 最终会累加到 50，蓝色分量会非常大（远超1.0），这也是为什么图片呈现深蓝色/青色高光的原因。</li>
+<li>最后通过 <code>tanh</code> 将这些巨大的数值压回 <code>[0, 1]</code> 范围进行显示。</li>
+</ol>
+<h2 id="_3">类似着色器通用原理<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<p>这些代码之所以能用极短的字符数产生如此惊人的效果，是因为它们利用了一种特殊的渲染技术：<strong>体积光线步进 (Volumetric Raymarching)</strong>。</p>
+<hr />
+<h3 id="_4">第一部分：底层技术原理<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
+<p>这些Shader并不像传统游戏渲染那样使用三角形网格（Rasterization），而是使用数学公式来定义空间。</p>
+<h4 id="1-raymarching">1. 核心机制：光线步进 (Raymarching)<a class="headerlink" href="#1-raymarching" title="Permanent link">&para;</a></h4>
+<p>想象你的屏幕是相机的底片。对于屏幕上的每一个像素，我们向场景中发射一条射线（Ray）。</p>
+<ul>
+<li><strong>传统光追</strong>：计算射线与三角形的交点（数学上很贵）。</li>
+<li><strong>Raymarching</strong>：沿着射线一步一步向前走（Marching）。每走一步，就问一句：“我现在离最近的物体有多远？”（这个距离由 <strong>SDF</strong> 符号距离场函数提供）。</li>
+</ul>
+<h4 id="2-volumetric-accumulation">2. 这里的特殊技巧：体积累积 (Volumetric Accumulation)<a class="headerlink" href="#2-volumetric-accumulation" title="Permanent link">&para;</a></h4>
+<p>你发的这些Shader属于 Raymarching 的一个变种，常被称为 <strong>"Phantom Mode"</strong> 或 <strong>"Glow Accumulation"</strong>。</p>
+<ul>
+<li><strong>标准 Raymarching</strong>：走到物体表面（距离接近0）就停下来，计算光照，画出实体。</li>
+<li><strong>体积 Raymarching (你的例子)</strong>：</li>
+<li>射线<strong>穿过</strong>物体，不会停下来。</li>
+<li>在每一步，根据当前点距离物体的距离 <code>d</code>，累加颜色。</li>
+<li><strong>公式</strong>：<code>Color += BaseColor / Distance</code>。</li>
+<li><strong>原理</strong>：当射线经过物体表面附近时，<code>Distance</code> 很小，<code>1/Distance</code> 很大，颜色就会暴涨。这产生了一种“发光的雾”或“霓虹灯”的效果，仿佛物体是由光组成的半透明体。</li>
+</ul>
+<h4 id="3-space-foldingdomain-repetition">3. 空间折叠 (Space Folding/Domain Repetition)<a class="headerlink" href="#3-space-foldingdomain-repetition" title="Permanent link">&para;</a></h4>
+<p>为什么代码里没有定义几千个方块，却能看到无限延伸的结构？</p>
+<ul>
+<li><strong>原理</strong>：利用 <code>sin()</code>, <code>cos()</code>, <code>mod()</code>, <code>fract()</code> 等周期函数来变换空间坐标 <code>p</code>。</li>
+<li><strong>例子</strong>：如果你计算距离时用 <code>length(sin(p))</code> 而不是 <code>length(p)</code>，因为 <code>sin</code> 是周期的，原本的一个球体就会在空间中无限重复，变成无数个球体。</li>
+</ul>
+<hr />
+<h3 id="_5">第二部分：如何自己写出这种效果？（标准流程）<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
+<p>要创作这样的Shader，遵循以下 <strong>5步法</strong>：</p>
+<h4 id="step-1-setup">Step 1: 建立坐标系 (Setup)<a class="headerlink" href="#step-1-setup" title="Permanent link">&para;</a></h4>
+<p>将屏幕像素坐标 <code>gl_FragCoord</code> 转换为标准化的 UV 坐标 (-1 到 1)，并定义射线方向。</p>
+<div class="highlight"><pre><span></span><code><span class="kt">vec2</span><span class="w"> </span><span class="n">uv</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nb">gl_FragCoord</span><span class="p">.</span><span class="n">xy</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">0.5</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">iResolution</span><span class="p">.</span><span class="n">xy</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">iResolution</span><span class="p">.</span><span class="n">y</span><span class="p">;</span>
+<span class="kt">vec3</span><span class="w"> </span><span class="n">rayDir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">normalize</span><span class="p">(</span><span class="kt">vec3</span><span class="p">(</span><span class="n">uv</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">));</span><span class="w"> </span><span class="c1">// Z=1 是相机朝向</span>
+<span class="kt">vec3</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">vec3</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mf">5.0</span><span class="p">);</span><span class="w"> </span><span class="c1">// 相机位置</span>
+</code></pre></div>
+<h4 id="step-2-define-geometry">Step 2: 编写距离函数 (Define Geometry)<a class="headerlink" href="#step-2-define-geometry" title="Permanent link">&para;</a></h4>
+<p>这是发挥创意的核心。你需要构造一个数学式子来定义形状。</p>
+<ul>
+<li><strong>基础</strong>：<code>d = length(p) - 1.0</code> (球体)。</li>
+<li><strong>重复</strong>：<code>d = length(mod(p, 2.0) - 1.0) - 0.5</code> (无限重复的球阵列)。</li>
+<li><strong>扭曲</strong>：<code>p.xz *= rot(iTime)</code> (旋转空间)。</li>
+</ul>
+<h4 id="step-3-the-loop">Step 3: 步进循环 (The Loop)<a class="headerlink" href="#step-3-the-loop" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mo">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="mi">60</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// 1. 也许在这里扭曲空间 p</span>
+<span class="w">    </span><span class="c1">// 2. 计算距离 d</span>
+<span class="w">    </span><span class="c1">// 3. 累加颜色 (越近越亮)</span>
+<span class="w">    </span><span class="n">col</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="kt">vec3</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">0.2</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="n">abs</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">0.001</span><span class="p">);</span><span class="w"> </span>
+<span class="w">    </span><span class="c1">// 4. 沿射线前进</span>
+<span class="w">    </span><span class="n">p</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">rayDir</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">d</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.5</span><span class="p">;</span><span class="w"> </span><span class="c1">// 0.5是步长，越小越精细但越慢</span>
+<span class="p">}</span>
+</code></pre></div>
+<h4 id="step-4-coloring">Step 4: 调色 (Coloring)<a class="headerlink" href="#step-4-coloring" title="Permanent link">&para;</a></h4>
+<p>不要只用一种颜色。可以让颜色随 <code>i</code> (迭代次数)、<code>p</code> (空间位置) 或 <code>d</code> (距离) 变化。</p>
+<h4 id="step-5-post-processing">Step 5: 色调映射 (Post-processing)<a class="headerlink" href="#step-5-post-processing" title="Permanent link">&para;</a></h4>
+<p>因为累加的颜色可能会超过100.0，最后必须压缩到 [0, 1] 范围。</p>
+<div class="highlight"><pre><span></span><code><span class="n">fragColor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tanh</span><span class="p">(</span><span class="n">col</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.01</span><span class="p">);</span><span class="w"> </span><span class="c1">// 或者 pow(col, vec4(0.45));</span>
+</code></pre></div>
+<hr />
+<h3 id="_6">第三部分：新例子<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
+<h4 id="cyber-matrix">例子 ：赛博矩阵 (Cyber Matrix)<a class="headerlink" href="#cyber-matrix" title="Permanent link">&para;</a></h4>
+<p>这个效果模拟了一种数字空间的矩阵网格，带有强烈的透视感和流动感。</p>
+<p><strong>shaders/demo.fs</strong></p>
+<div class="highlight"><pre><span></span><code><span class="cp">#version 330 core</span>
+<span class="k">out</span><span class="w"> </span><span class="kt">vec4</span><span class="w"> </span><span class="n">FragColor</span><span class="p">;</span>
+
+<span class="k">uniform</span><span class="w"> </span><span class="kt">vec2</span><span class="w"> </span><span class="n">iResolution</span><span class="p">;</span>
+<span class="k">uniform</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">iTime</span><span class="p">;</span>
+
+<span class="c1">// 2D 旋转矩阵辅助函数</span>
+<span class="kt">mat2</span><span class="w"> </span><span class="n">rot</span><span class="p">(</span><span class="kt">float</span><span class="w"> </span><span class="n">a</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sin</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cos</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="kt">mat2</span><span class="p">(</span><span class="n">c</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="n">s</span><span class="p">,</span><span class="w"> </span><span class="n">s</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="n">main</span><span class="p">()</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">vec2</span><span class="w"> </span><span class="n">uv</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nb">gl_FragCoord</span><span class="p">.</span><span class="n">xy</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">0.5</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">iResolution</span><span class="p">.</span><span class="n">xy</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">iResolution</span><span class="p">.</span><span class="n">y</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">vec3</span><span class="w"> </span><span class="n">rayDir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">normalize</span><span class="p">(</span><span class="kt">vec3</span><span class="p">(</span><span class="n">uv</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">));</span><span class="w"> </span><span class="c1">// 相机朝前</span>
+
+<span class="w">    </span><span class="kt">vec3</span><span class="w"> </span><span class="n">p</span><span class="p">;</span><span class="w">     </span><span class="c1">// 当前射线的空间位置</span>
+<span class="w">    </span><span class="kt">vec4</span><span class="w"> </span><span class="n">col</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">vec4</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span><span class="w"> </span><span class="c1">// 累积颜色</span>
+
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">totalDist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="c1">// 总行进距离</span>
+
+<span class="w">    </span><span class="c1">// 初始相机移动</span>
+<span class="w">    </span><span class="kt">vec3</span><span class="w"> </span><span class="n">camPos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">vec3</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mf">3.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">iTime</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">2.0</span><span class="p">);</span><span class="w"> </span><span class="c1">// 相机在Z轴匀速前进</span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">float</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">64.0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">camPos</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">rayDir</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">totalDist</span><span class="p">;</span>
+
+<span class="w">        </span><span class="c1">// --- 空间折叠与变换 ---</span>
+<span class="w">        </span><span class="c1">// 1. 将空间旋转，产生眩晕感</span>
+<span class="w">        </span><span class="n">p</span><span class="p">.</span><span class="n">xy</span><span class="w"> </span><span class="o">*=</span><span class="w"> </span><span class="n">rot</span><span class="p">(</span><span class="n">p</span><span class="p">.</span><span class="n">z</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.1</span><span class="p">);</span><span class="w"> </span>
+
+<span class="w">        </span><span class="c1">// 2. 无限重复 (Mod Domain)</span>
+<span class="w">        </span><span class="c1">// 将空间分割成 2x2x2 的小盒子</span>
+<span class="w">        </span><span class="kt">vec3</span><span class="w"> </span><span class="n">q</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mod</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1.0</span><span class="p">;</span><span class="w"> </span>
+
+<span class="w">        </span><span class="c1">// --- 距离场计算 ---</span>
+<span class="w">        </span><span class="c1">// 计算一个十字形结构的距离 (Cube frame)</span>
+<span class="w">        </span><span class="c1">// length(q.xz) 是圆柱，max是取交集或并集逻辑</span>
+<span class="w">        </span><span class="kt">float</span><span class="w"> </span><span class="n">d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">length</span><span class="p">(</span><span class="n">q</span><span class="p">.</span><span class="n">xz</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">0.1</span><span class="p">;</span><span class="w"> </span><span class="c1">// 竖管</span>
+<span class="w">        </span><span class="n">d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">min</span><span class="p">(</span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">length</span><span class="p">(</span><span class="n">q</span><span class="p">.</span><span class="n">xy</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">0.1</span><span class="p">);</span><span class="w"> </span><span class="c1">// 横管</span>
+
+<span class="w">        </span><span class="c1">// --- 颜色累积 (体积光) ---</span>
+<span class="w">        </span><span class="c1">// 颜色随深度(totalDist)变暗，形成雾效</span>
+<span class="w">        </span><span class="c1">// 核心：0.02 / abs(d) 产生发光</span>
+<span class="w">        </span><span class="kt">vec3</span><span class="w"> </span><span class="n">neon</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">vec3</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span><span class="w"> </span><span class="mf">0.8</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">);</span><span class="w"> </span><span class="c1">// 青色</span>
+<span class="w">        </span><span class="n">col</span><span class="p">.</span><span class="n">rgb</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">neon</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.02</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="n">abs</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">0.001</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.05</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">totalDist</span><span class="p">);</span>
+
+<span class="w">        </span><span class="c1">// 步进</span>
+<span class="w">        </span><span class="c1">// 这里步长稍微小一点，为了获得更细腻的体积</span>
+<span class="w">        </span><span class="kt">float</span><span class="w"> </span><span class="n">stepSize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="n">abs</span><span class="p">(</span><span class="n">d</span><span class="p">));</span><span class="w"> </span>
+<span class="w">        </span><span class="n">totalDist</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">stepSize</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.5</span><span class="p">;</span><span class="w"> </span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// 色调映射</span>
+<span class="w">    </span><span class="n">col</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">col</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">2.0</span><span class="p">);</span><span class="w"> </span><span class="c1">// 另一种常用的映射方法</span>
+<span class="w">    </span><span class="n">FragColor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">col</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
