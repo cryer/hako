@@ -1,0 +1,19 @@
+site_name: Hako
+site_url: https://cryer.github.io/hako/
+
+theme:
+  name: material 
+
+nav:
+  - Home: wiki/index.md
+  - 标准库unique: wiki/unique.md
+  - 着色器: wiki/shaders.md
+
+
+markdown_extensions:
+  - toc:
+      permalink: true
+  - codehilite:
+      guess_lang: false
+  - admonition
+  - pymdownx.superfences 
