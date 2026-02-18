@@ -1,4 +1,4 @@
-﻿#define _WIN32_WINNT 0x0600  // 确保包含 SendInput 所需的定义
+#define _WIN32_WINNT 0x0600  // 确保包含 SendInput 所需的定义
 #include <windows.h>
 #include <stdio.h>
 
@@ -140,7 +140,7 @@ int main() {
     printf("3. 模拟输入 'Hello' (请确保焦点在文本框)...\n");
     // 使用 Unicode 模式输入文本，不受输入法影响
     TypeText(L"Hello World");
-    
+
     // 使用 VK 模式输入功能键
     // KeyTapVK(VK_RETURN);
 
