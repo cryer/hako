@@ -3,7 +3,7 @@
 
 int main() {
     // 1. 创建游戏实例
-    Game game(800, 600, "OpenGL Game");
+    Game game(800, 600);
     if (!game.Init("OpenGL Game")) return -1;
 
     // 2. 加载着色器资源 (起好名字，全局随时调取)

@@ -29,7 +29,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     g_Game->camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
 
-Game::Game(int w, int h, const char* title) : width(w), height(h), camera(glm::vec3(0.0f, 3.0f, 3.0f)), myMenu(1.5f, -10.0f) {
+Game::Game(int w, int h) : width(w), height(h), camera(glm::vec3(0.0f, 3.0f, 3.0f)), myMenu(1.5f, -10.0f) {
     g_Game = this;
     lastX = w / 2.0f;
     lastY = h / 2.0f;

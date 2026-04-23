@@ -32,7 +32,7 @@ public:
     bool firstMouse = true;
     bool lastTerminalVisible = false;
 
-    Game(int w, int h, const char* title);
+    Game(int w, int h);
     ~Game();
 
     bool Init(const char* title);
