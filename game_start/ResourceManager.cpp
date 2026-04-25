@@ -2,6 +2,7 @@
 #include <iostream>
 #include "stb_image.h" 
 
+
 std::map<std::string, Shader*> ResourceManager::Shaders;
 std::map<std::string, Model*> ResourceManager::Models;
 std::map<std::string, unsigned int> ResourceManager::Textures;
@@ -16,9 +17,10 @@ Shader* ResourceManager::GetShader(const std::string& name) {
     return Shaders[name];
 }
 
-Model* ResourceManager::LoadModel(const std::string& name, const std::string& file) {
-    stbi_set_flip_vertically_on_load(true); // 模型加载需要翻转Y
-    Model* model = new Model(file);
+Model* ResourceManager::LoadModel(const std::string& name, const std::string& file, bool needAABB) {
+    // 模型加载不需要翻转Y
+    stbi_set_flip_vertically_on_load(false); 
+    Model* model = new Model(file, needAABB);
     Models[name] = model;
     return model;
 }
@@ -28,7 +30,8 @@ Model* ResourceManager::GetModel(const std::string& name) {
 }
 
 unsigned int ResourceManager::LoadTexture(const std::string& name, const char* file) {
-    stbi_set_flip_vertically_on_load(false); // UI和普通纹理不翻转
+    // UI和普通纹理翻转
+    stbi_set_flip_vertically_on_load(true); 
     unsigned int textureID;
     glGenTextures(1, &textureID);
     
@@ -67,6 +70,8 @@ unsigned int ResourceManager::LoadCubemap(const std::string& name, std::vector<s
     for (unsigned int i = 0; i < faces.size(); i++) {
         unsigned char *data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
         if (data) {
+            // 从POSITIVE_X就是右开始，每次加1，顺序依次是
+            // 右，左，上，下，前，后。因此纹理图片传入顺序要一致
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
             stbi_image_free(data);
         } else {
