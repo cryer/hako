@@ -27,7 +27,8 @@ add_executable(game
 	ResourceManager.cpp
 	GazeMenu.cpp 
 	DebugTerminal.cpp
-	stb_image_impl.cpp)
+	stb_image_impl.cpp
+	AABB.cpp)
 
 target_link_libraries(game PRIVATE glad::glad glfw glm::glm assimp::assimp imgui::imgui)
 
