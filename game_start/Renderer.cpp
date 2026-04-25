@@ -1,4 +1,7 @@
 #include "Renderer.h"
+#include "mesh.h"
+
+#include <GLFW/glfw3.h>
 
 Renderer::Renderer() {
     InitPrimitives();
@@ -29,7 +32,7 @@ void Renderer::InitShadowMap() {
 void Renderer::InitPrimitives() {
     // 省略原来的大段数组声明，此处用原数组直接填充
     float skyboxVertices[] = { -1.0f,  1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f,  1.0f, -1.0f, -1.0f,  1.0f, -1.0f, -1.0f, -1.0f,  1.0f, -1.0f, -1.0f, -1.0f, -1.0f,  1.0f, -1.0f, -1.0f,  1.0f, -1.0f, -1.0f,  1.0f,  1.0f, -1.0f, -1.0f,  1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f,  1.0f, 1.0f,  1.0f,  1.0f, 1.0f,  1.0f,  1.0f, 1.0f,  1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f,  1.0f, -1.0f,  1.0f,  1.0f, 1.0f,  1.0f,  1.0f, 1.0f,  1.0f,  1.0f, 1.0f, -1.0f,  1.0f, -1.0f, -1.0f,  1.0f, -1.0f,  1.0f, -1.0f, 1.0f,  1.0f, -1.0f, 1.0f,  1.0f,  1.0f, 1.0f,  1.0f,  1.0f, -1.0f,  1.0f,  1.0f, -1.0f,  1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f,  1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f,  1.0f, 1.0f, -1.0f,  1.0f };
-    float planeVertices[] = { 10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f, -10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f, -10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f, 10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f, 10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,  10.0f, 10.0f, -10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,  0.0f, 10.0f };
+    float planeVertices[] = { 30.0f, -0.5f,  30.0f,  0.0f, 1.0f, 0.0f,  30.0f,  0.0f, -30.0f, -0.5f, -30.0f,  0.0f, 1.0f, 0.0f,   0.0f, 30.0f, -30.0f, -0.5f,  30.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f, 30.0f, -0.5f,  30.0f,  0.0f, 1.0f, 0.0f,  30.0f,  0.0f, 30.0f, -0.5f, -30.0f,  0.0f, 1.0f, 0.0f,  30.0f, 30.0f, -30.0f, -0.5f, -30.0f,  0.0f, 1.0f, 0.0f,  0.0f, 30.0f };
     float vertices[] = { 0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, -0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, 0.5f, -0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f, 0.5f, -0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, -0.5f, -0.5f, 0.5f, -0.5f, -0.5f, 0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f };
 
     // skybox VAO
@@ -53,7 +56,9 @@ void Renderer::InitPrimitives() {
     glEnableVertexAttribArray(0); glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 }
 
-void Renderer::RenderShadowPass(const std::vector<GameObject*>& objects, const glm::mat4& lightSpaceMatrix) {
+void Renderer::RenderShadowPass(
+            const std::vector<GameObject*>& objects, 
+            const glm::mat4& lightSpaceMatrix) {
     Shader* depthShader = ResourceManager::GetShader("depth");
     depthShader->use();
     depthShader->setMatrix4fv("lightSpaceMatrix", lightSpaceMatrix);
@@ -74,13 +79,26 @@ void Renderer::RenderShadowPass(const std::vector<GameObject*>& objects, const g
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Renderer::RenderMainPass(const std::vector<GameObject*>& objects, Camera& camera, glm::mat4 lightSpaceMatrix, glm::vec3 lightPos, bool shadowOn, float screenWidth, float screenHeight) {
+void Renderer::RenderMainPass(
+        const std::vector<GameObject*>& objects, 
+        Camera& camera, 
+        glm::mat4 lightSpaceMatrix,
+        glm::vec3 lightPos,
+        glm::vec3 sunDir, 
+        bool shadowOn, 
+        float screenWidth, 
+        float screenHeight) {
     glViewport(0, 0, screenWidth, screenHeight);
     glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     Shader* shader = ResourceManager::GetShader("standard");
     shader->use();
+    shader->setFloat3("dirLight.direction", sunDir);
+    shader->setFloat3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
+    shader->setFloat3("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
+    shader->setFloat3("dirLight.specular", 0.5f, 0.5f, 0.5f);
+
     shader->setFloat3("light.position", lightPos);
     shader->setFloat3("light.ambient",  0.2f, 0.2f, 0.2f);
     shader->setFloat3("light.diffuse",  0.5f, 0.5f, 0.5f);
@@ -148,17 +166,57 @@ void Renderer::RenderSkybox(Camera& camera, float screenWidth, float screenHeigh
     glDepthFunc(GL_LESS); 
 }
 
-void Renderer::RenderLightCube(Camera& camera, glm::vec3 lightPos, float screenWidth, float screenHeight) {
+void Renderer::RenderLightCube(Camera& camera, glm::vec3 lightPos, glm::vec3 sunPos, float screenWidth, float screenHeight) {
     Shader* lightShader = ResourceManager::GetShader("light");
     lightShader->use();
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), screenWidth / screenHeight, 0.1f, 100.0f);
     lightShader->setMatrix4fv("view", camera.GetViewMatrix());
     lightShader->setMatrix4fv("projection", projection);
     
+
     glm::mat4 model = glm::translate(glm::mat4(1.0f), lightPos);
+    
     model = glm::scale(model, glm::vec3(0.2f));
     lightShader->setMatrix4fv("model", model);
 
     glBindVertexArray(lightCubeVAO);
     glDrawArrays(GL_TRIANGLES, 0, 36);
+    // 绘制太阳
+    model = glm::translate(glm::mat4(1.0f), sunPos);
+    lightShader->setMatrix4fv("model", model);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
 }
+
+void Renderer::RenderAABBs(const std::vector<AABB>& aabbs, 
+                Camera& camera, 
+                float screenWidth, 
+                float screenHeight){
+    Shader* boxShader = ResourceManager::GetShader("light");
+    boxShader->use();
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), screenWidth / screenHeight, 0.1f, 100.0f);
+    boxShader->setMatrix4fv("view", camera.GetViewMatrix());
+    boxShader->setMatrix4fv("projection", projection);
+
+    // 开启线框绘制模式
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    // 开启深度测试，避免线框交叉时显示错误
+    // glEnable(GL_DEPTH_TEST); 
+    glBindVertexArray(lightCubeVAO);
+    for (auto &aabb : aabbs){
+        // 计算中心点 (平移量)
+        glm::vec3 center = (aabb.min + aabb.max) * 0.5f;
+        // 计算三轴长度 (缩放量)
+        glm::vec3 extent = aabb.max - aabb.min;
+        // 构建 Model 矩阵：先缩放，后平移
+        glm::mat4 model = glm::translate(glm::mat4(1.0f), center);
+        model = glm::scale(model, extent);
+        
+        boxShader->setMatrix4fv("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+    }
+
+    // 关闭线框绘制模式（即设置填充模式）
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+}
+

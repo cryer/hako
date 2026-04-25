@@ -2,7 +2,6 @@
 
 unsigned int TextureFromFile(const char *path, const string &directory, bool gamma)
 {
-    // std::string utf8Path = gbkOrShiftJisToUtf8(path);
     string filename = string(path);
 
     filename = directory + '/' + filename;
@@ -21,15 +20,14 @@ unsigned int TextureFromFile(const char *path, const string &directory, bool gam
         if (nrComponents == 1)
             format = GL_RED;
         else if (nrComponents == 2)
-            format = GL_RG;        // ✅ 2 通道：R=灰度, G=Alpha
+            format = GL_RG;      
         else if (nrComponents == 3)
             format = GL_RGB;
         else if (nrComponents == 4)
             format = GL_RGBA;
-        // ❗️这里可以加一个 else 分支处理未知情况
         else {
             std::cout << "Unknown number of components: " << nrComponents << ". Using RGBA." << std::endl;
-            format = GL_RGBA; // 或者直接返回错误
+            format = GL_RGBA; 
         }
 
         glBindTexture(GL_TEXTURE_2D, textureID);
