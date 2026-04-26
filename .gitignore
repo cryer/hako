@@ -3,3 +3,5 @@
 **/assets/
 *.obj
 *.exe
+*.bat
+imgui.ini
