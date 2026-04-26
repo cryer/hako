@@ -6,8 +6,6 @@ unsigned int TextureFromFile(const char *path, const string &directory, bool gam
 
     filename = directory + '/' + filename;
 
-    // === 调试：打印实际尝试加载的路径 ===
-    // std::cout << "Trying to load texture: " << filename << std::endl;
 
     unsigned int textureID;
     glGenTextures(1, &textureID);

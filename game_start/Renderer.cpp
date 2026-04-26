@@ -187,7 +187,7 @@ void Renderer::RenderLightCube(Camera& camera, glm::vec3 lightPos, glm::vec3 sun
     glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
-void Renderer::RenderAABBs(const std::vector<AABB>& aabbs, 
+void Renderer::RenderAABBs(const std::vector<GameObject*>& objects, 
                 Camera& camera, 
                 float screenWidth, 
                 float screenHeight){
@@ -202,7 +202,8 @@ void Renderer::RenderAABBs(const std::vector<AABB>& aabbs,
     // 开启深度测试，避免线框交叉时显示错误
     // glEnable(GL_DEPTH_TEST); 
     glBindVertexArray(lightCubeVAO);
-    for (auto &aabb : aabbs){
+    for (auto obj : objects){
+        AABB aabb = obj->GetWorldAABB();
         // 计算中心点 (平移量)
         glm::vec3 center = (aabb.min + aabb.max) * 0.5f;
         // 计算三轴长度 (缩放量)

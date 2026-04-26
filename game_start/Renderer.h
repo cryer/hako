@@ -31,5 +31,5 @@ public:
     void RenderLightCube(Camera& camera, glm::vec3 lightPos,glm::vec3 sunPos, float screenWidth, float screenHeight);
 
     // 绘制所有AABB线框
-    void RenderAABBs(const std::vector<AABB>& aabbs, Camera& camera, float screenWidth, float screenHeight);
+    void RenderAABBs(const std::vector<GameObject*>& objects, Camera& camera, float screenWidth, float screenHeight);
 };

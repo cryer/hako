@@ -1,10 +1,10 @@
-#ifndef MODEL_H
-#define MODEL_H
+#pragma once
 
 #include <glad/glad.h> 
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+// 不要在头文件中定义stb_image.h的实现
 #include "stb_image.h"
 
 #include <assimp/Importer.hpp>
@@ -25,18 +25,19 @@ using namespace std;
 
 unsigned int TextureFromFile(const char *path, const string &directory, bool gamma = false);
 
+
 class Model 
 {
 public:
+    // model data 
     vector<Texture> textures_loaded;
     vector<Mesh>    meshes;
     string directory;
     bool gammaCorrection;
 
-    // 整个模型的局部AABB（由内部所有Mesh的AABB合并而成）
     AABB localAABB;
-    //是否计算碰撞体积标志
     bool calculateAABB;
+
 
     Model(string const &path,
         bool calcAABB = true,
@@ -85,20 +86,18 @@ public:
 private:
     void loadModel(string const &path)
     {
- 
         Assimp::Importer importer;
         const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
-        
-        if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) // if is Not Zero
+
+        if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) 
         {
             cout << "ERROR::ASSIMP:: " << importer.GetErrorString() << endl;
             return;
         }
-        
+   
         directory = path.substr(0, path.find_last_of('/'));
-
-      
         processNode(scene->mRootNode, scene);
+
 
         // ========== 统计并打印顶点数量 ==========
         unsigned int totalVertices = 0;
@@ -114,23 +113,20 @@ private:
         cout << "Total Indices: " << totalIndices << endl;
 
         // 如果开启了计算AABB，可以在这里打印一下包围盒大小做验证
-        if (calculateAABB) {
-            cout << "Model AABB Min: (" << localAABB.min.x << ", " << localAABB.min.y << ", " << localAABB.min.z << ")" << endl;
-            cout << "Model AABB Max: (" << localAABB.max.x << ", " << localAABB.max.y << ", " << localAABB.max.z << ")" << endl;
-        }
+        // if (calculateAABB) {
+        //     cout << "Model AABB Min: (" << localAABB.min.x << ", " << localAABB.min.y << ", " << localAABB.min.z << ")" << endl;
+        //     cout << "Model AABB Max: (" << localAABB.max.x << ", " << localAABB.max.y << ", " << localAABB.max.z << ")" << endl;
+        // }
         cout << "========================================" << endl;
-        // =================================================
     }
 
     void processNode(aiNode *node, const aiScene *scene)
     {
-        
         for(unsigned int i = 0; i < node->mNumMeshes; i++)
         {
             aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
             meshes.push_back(processMesh(mesh, scene));
         }
-       
         for(unsigned int i = 0; i < node->mNumChildren; i++)
         {
             processNode(node->mChildren[i], scene);
@@ -140,36 +136,30 @@ private:
 
     Mesh processMesh(aiMesh *mesh, const aiScene *scene)
     {
-       
         vector<Vertex> vertices;
         vector<unsigned int> indices;
         vector<Texture> textures;
 
-  
+        // 当前Mesh的局部AABB
         AABB meshAABB;
 
- 
         for(unsigned int i = 0; i < mesh->mNumVertices; i++)
         {
             Vertex vertex;
-            for (int j = 0; j < MAX_BONE_INFLUENCE; j++) {
-                vertex.m_BoneIDs[j] = -1;
-                vertex.m_Weights[j] = 0.0f;
-            }
 
-            glm::vec3 vector;
-      
+            glm::vec3 vector; 
+            // positions
             vector.x = mesh->mVertices[i].x;
             vector.y = mesh->mVertices[i].y;
             vector.z = mesh->mVertices[i].z;
             vertex.Position = vector;
 
-          
+            // 在获取顶点后，立刻扩充AABB (且几乎没有性能损耗)
             if (calculateAABB) {
                 meshAABB.Expand(vector);
             }
 
-         
+            // normals
             if (mesh->HasNormals())
             {
                 vector.x = mesh->mNormals[i].x;
@@ -177,20 +167,20 @@ private:
                 vector.z = mesh->mNormals[i].z;
                 vertex.Normal = vector;
             }
-       
+            // texture coordinates
             if(mesh->mTextureCoords[0]) 
             {
                 glm::vec2 vec;
-                
+   
                 vec.x = mesh->mTextureCoords[0][i].x; 
                 vec.y = mesh->mTextureCoords[0][i].y;
                 vertex.TexCoords = vec;
-           
+                // tangent
                 vector.x = mesh->mTangents[i].x;
                 vector.y = mesh->mTangents[i].y;
                 vector.z = mesh->mTangents[i].z;
                 vertex.Tangent = vector;
-            
+                // bitangent
                 vector.x = mesh->mBitangents[i].x;
                 vector.y = mesh->mBitangents[i].y;
                 vector.z = mesh->mBitangents[i].z;
@@ -205,12 +195,14 @@ private:
         for(unsigned int i = 0; i < mesh->mNumFaces; i++)
         {
             aiFace face = mesh->mFaces[i];
-           
             for(unsigned int j = 0; j < face.mNumIndices; j++)
                 indices.push_back(face.mIndices[j]);        
         }
         //读取 Material
         aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];    
+        // diffuse: texture_diffuseN
+        // specular: texture_specularN
+        // normal: texture_normalN
 
         // 1. diffuse maps
         vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
@@ -224,8 +216,8 @@ private:
         // 4. height maps
         std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height");
         textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
-
-
+      
+        //如果没有贴图，就传颜色给 Shader，针对没有图片的场景
         if (diffuseMaps.empty()) {
             aiColor3D color(0.8f, 0.8f, 0.8f); // 默认灰色
             material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
@@ -253,6 +245,7 @@ private:
         return Mesh(vertices, indices, textures, meshAABB);
     }
 
+    
     vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, string typeName)
     {
         vector<Texture> textures;
@@ -260,7 +253,6 @@ private:
         {
             aiString str;
             mat->GetTexture(type, i, &str);
-            
             bool skip = false;
             for(unsigned int j = 0; j < textures_loaded.size(); j++)
             {
@@ -278,11 +270,9 @@ private:
                 texture.type = typeName;
                 texture.path = str.C_Str();
                 textures.push_back(texture);
-                textures_loaded.push_back(texture);  
+                textures_loaded.push_back(texture);
             }
         }
         return textures;
     }
 };
-
-#endif

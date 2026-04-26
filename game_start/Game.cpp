@@ -55,6 +55,7 @@ bool OpenChromeBrowser(const std::wstring& url) {
     return true;
 }
 
+
 Game::Game(int w, int h) : width(w), height(h), camera(glm::vec3(0.0f, 3.0f, 3.0f)), myMenu(1.5f, -10.0f) {
     g_Game = this;
     lastX = w / 2.0f;
@@ -123,29 +124,12 @@ void Game::SetupMenu() {
     // 3. 初始化按钮列表
     // 注意：对于需要访问成员变量的lambda，必须在列表初始化时捕获[this]
     std::vector<ButtonConfig> buttons = {
-        {"ExitGame", {0.55f, 0.35f, 0.f}, {0.2f, 0.2f}, "exit",   [](){ std::cout << "Exit\n"; exit(0); }},
-        {"YouTube",  {-0.55f, 0.35f, 0.f},{0.25f, 0.2f},"youtube",
-                    [](){
-                          OpenChromeBrowser(
-                            L"https://www.youtube.com/");
-                          std::cout << "YouTube\n"; 
-                        }
-        },
-        {"VS",       {-0.55f, 0.15f, 0.f},{0.25f, 0.2f},"vs",     [](){ std::cout << "VS\n"; }},
-        {"Clash",    {-0.55f, -0.05f, 0.f},{0.25f, 0.2f},"clash", [](){ std::cout << "Clash\n"; }},
-        
-        // 下面两个需要捕获 this，所以 lambda 写法略有不同，但在 std::function 中是兼容的
-        {"LD", {-0.55f, -0.25f, 0.f},{0.25f, 0.2f},"ld", 
-                        [this](){ lightRotate = !lightRotate; 
-                        std::cout << "LD\n"; 
-                                }
-        },
-        {"SS", {-0.55f, -0.45f, 0.f},{0.25f, 0.2f},"ss", 
-                        [this](){ 
-                                shadowOn = !shadowOn; 
-                                std::cout << "SS\n"; 
-                                }
-        },
+        {"ExitGame", {0.55f, 0.35f, 0.f}, {0.2f, 0.2f}, "exit",[](){ std::cout << "Exit\n"; exit(0);}},
+        {"YouTube", {-0.55f, 0.35f, 0.f},{0.25f, 0.2f},"youtube",[](){OpenChromeBrowser(L"https://www.youtube.com/");std::cout << "YouTube\n"; }},
+        {"VS", {-0.55f, 0.15f, 0.f},{0.25f, 0.2f},"vs", [](){ std::cout << "VS\n"; }},
+        {"Clash", {-0.55f, -0.05f, 0.f},{0.25f, 0.2f},"clash", [](){ std::cout << "Clash\n"; }},
+        {"LD", {-0.55f, -0.25f, 0.f},{0.25f, 0.2f},"ld", [this](){ lightRotate = !lightRotate; std::cout << "LD\n"; }},
+        {"SS", {-0.55f, -0.45f, 0.f},{0.25f, 0.2f},"ss", [this](){ shadowOn = !shadowOn; std::cout << "SS\n"; }},
         {"GitHub", {0.12f, -0.15f, 0.f},{1.0f, 0.7f}, "github", [](){ std::cout << "Git\n"; }}
     };
 
@@ -191,18 +175,19 @@ bool Game::Init(const char* title) {
     ImGui_ImplOpenGL3_Init("#version 330");
 
     // 4. 绑定终端指令和变量
-    terminal.BindFloat("lightPosX", &lightPos.x);
-    terminal.BindFloat("lightPosY", &lightPos.y);
-    terminal.BindFloat("lightPosZ", &lightPos.z);
     terminal.BindBool("showGun", &showGun);
     terminal.BindBool("shadowOn", &shadowOn);
     terminal.BindBool("lightRotate", &lightRotate);
-    terminal.BindBool("aabbBox", &aabbBox);
+    terminal.BindBool("showBox", &showBox);
 
-    terminal.RegisterCommand("resetLight", [&](const std::vector<std::string>& args) {
-        lightPos = glm::vec3(1.2f, 3.0f, 3.0f);
+    terminal.RegisterCommand("reset", [&](const std::vector<std::string>& args) {
+        showGun = false;
+        shadowOn = false;
+        lightRotate = false;
+        showBox = false;
         terminal.AddLog("reset light pos.");
     }, "Reset light to default");
+
     terminal.AddLog("Developer Terminal Ready. Press '~' to toggle.");
 
     // 初始化渲染器
@@ -223,8 +208,6 @@ void Game::ProcessInput() {
     // 触发武器开火
     if (showGun && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
         for (auto obj : sceneObjects) {
-            // 通过动态转换找到武器实体，并调用它的专属方法
-            // 值得研究 #TODO
             PlayerWeapon* weapon = dynamic_cast<PlayerWeapon*>(obj);
             if (weapon) {
                 weapon->Fire(static_cast<float>(glfwGetTime()));
@@ -283,6 +266,10 @@ void Game::Run() {
             ProcessInput();
         }
 
+        // 玩家碰撞box 直接每帧创建一个对象就好 没什么性能消耗
+        playerBox = AABB::CreateFromCenterAndSize(camera.Position, glm::vec3(2.0f,2.0f,2.0f));
+        // cout << "Player AABB Min: (" << playerBox.min.x << ", " << playerBox.min.y << ", " << playerBox.min.z << ")" << endl;
+        
         // --- 游戏逻辑更新 (解耦重点：实体自己管自己的运算) ---
         for (auto obj : sceneObjects) {
             // 同步全局 showGun 状态给具体武器
@@ -294,24 +281,17 @@ void Game::Run() {
             if (obj->isVisible) {
                 obj->Update(deltaTime);
             }
-        }
-
-        // 玩家碰撞box 直接每帧创建一个对象就好 没什么性能消耗
-        playerBox = AABB::CreateFromCenterAndSize(camera.Position, glm::vec3(2.0f,2.0f,2.0f));
-        // cout << "Player AABB Min: (" << playerBox.min.x << ", " << playerBox.min.y << ", " << playerBox.min.z << ")" << endl;
-
-        for (const auto& aabb : aabbs){
             /*
             ResolveCollision内部碰撞会反推第一个参数的box坐标
             利用反推box坐标更新camera相机位置
             */
-            if(ResolveCollision(playerBox, aabb)){
-                camera.Position = (playerBox.min + playerBox.max) * 0.5f;
+            if (!obj->hasCollision) continue; // 直接跳过没有碰撞的物体！
+
+            if(ResolveCollision(playerBox, obj->GetWorldAABB())){
+                 camera.Position  = (playerBox.min + playerBox.max) * 0.5f;
             }
-            // if (playerBox.Intersects(aabb)){
-            //     // cout << "collision! \n";
-            // }
         }
+
 
         // --- 渲染流程开始 ---
         // 如果灯源旋转
@@ -335,6 +315,7 @@ void Game::Run() {
         if (shadowOn) {
             glm::mat4 lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 1.0f, 20.0f);
             glm::mat4 lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+            // glm::mat4 lightView = glm::lookAt(dirLightPos, dirLightTarget, glm::vec3(0.0, 1.0, 0.0));
             lightSpaceMatrix = lightProjection * lightView;
             // 1. 生成阴影贴图
             renderer->RenderShadowPass(sceneObjects, lightSpaceMatrix);
@@ -347,8 +328,8 @@ void Game::Run() {
         renderer->RenderFloor(camera, lightSpaceMatrix, lightPos, shadowOn, (float)width, (float)height);
         renderer->RenderLightCube(camera, lightPos, dirLightPos,(float)width, (float)height);
         renderer->RenderSkybox(camera, (float)width, (float)height);
-        if (aabbBox){
-            renderer->RenderAABBs(aabbs, camera, (float)width, (float)height);
+        if (showBox){
+            renderer->RenderAABBs(sceneObjects, camera, (float)width, (float)height);
         }
 
      

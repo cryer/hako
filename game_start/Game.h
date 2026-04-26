@@ -22,9 +22,7 @@ public:
     Renderer* renderer;
     DebugTerminal terminal;
     GazeMenu myMenu;
-
     std::vector<GameObject*> sceneObjects;
-    std::vector<AABB> aabbs;
 
     AABB playerBox;
 
@@ -38,7 +36,7 @@ public:
 
     bool showGun = false;
     bool shadowOn = false;
-    bool aabbBox = true;
+    bool showBox = false;
     
     float deltaTime = 0.0f;
     float lastFrame = 0.0f;
@@ -55,11 +53,6 @@ public:
     void ProcessInput();
     void SetupMenu();
     void AddObject(GameObject* obj) { sceneObjects.push_back(obj); }
-    void AddAABB(GameObject* obj, Model* model) {
-        glm::mat4 tansformed = obj->transform.GetMatrix();
-        AABB newAABB = model->localAABB.GetTransformed(tansformed);
-        aabbs.push_back(newAABB);
-    }
 private:
     // 辅助函数：创建并返回一个配置好的 MenuItem
     MenuItem CreateMenuItem(
