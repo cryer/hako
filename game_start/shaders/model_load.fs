@@ -88,9 +88,10 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir)
 }
 
 void main()
-{   
+{  
+    vec4 texColor = texture(texture_diffuse1, TexCoords);
      // 环境光
-    vec3 ambient = light.ambient * texture(texture_diffuse1, TexCoords).rgb;
+    vec3 ambient = light.ambient * texColor.rgb;
 
     // 漫反射 
     vec3 norm = normalize(Normal);
@@ -125,9 +126,13 @@ void main()
 
     result += CalcDirLight(dirLight, norm, viewDir, shadow);
 
+    // Alpha 裁剪（阈值 0.1~0.5 可调，0.1 能保留抗锯齿边缘）
+    if (texColor.a < 0.1) {
+        discard; // 直接丢弃该像素，相当于完全透明
+    }
     FragColor = vec4(result, 1.0);
-
-    // FragColor = texture(texture_diffuse1, TexCoords);
+    // 如果是开启混合，就要保留a分量
+    // FragColor = vec4(result, texColor.a);
 }
 
 

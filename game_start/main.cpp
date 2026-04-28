@@ -47,10 +47,15 @@ int main() {
 
     ResourceManager::LoadModel("shield", "assets/models/weapons/shield_d.obj");
     ResourceManager::LoadModel("sword", "assets/models/weapons/sword_j.obj");
-    ResourceManager::LoadModel("tree", "assets/scenes/pinetree/pinetree.obj");
    
     ResourceManager::LoadModel("whale", "assets/models/animals/Whale.obj");
 
+    ResourceManager::LoadModel("tree", "assets/scenes/pinetree/pinetree.obj");
+    ResourceManager::LoadModel("plant", "assets/scenes/environoment/Plant.obj");
+    ResourceManager::LoadModel("rock", "assets/scenes/environoment/Rock_01.obj");
+    ResourceManager::LoadModel("greenTree", "assets/scenes/environoment/Tree_Green_01.obj");
+    ResourceManager::LoadModel("redTree", "assets/scenes/environoment/WizardTree.obj");
+    ResourceManager::LoadModel("trunk", "assets/scenes/environoment/Trunk_01.obj");
 
     
 
@@ -80,11 +85,22 @@ int main() {
         {"Shield","shield","standard",{-3.0f, 1.5f, 3.0f},{0.0f, 90.0f, 0.0f}, {1.2f, 1.2f, 1.2f}},
         {"Sword","sword","standard",{-3.0f, 1.5f, 1.5f},{0.0f, 90.0f, 0.0f}, {1.2f, 1.2f, 1.2f}},
         {"Tree","tree","standard",{-10.0f, -0.5f, 2.0f},{0.0f, 0.0f, 0.0f}, {5.0f, 5.0f, 5.0f}},
+        {"Plant","plant","standard",{-6.0f, -0.4f, 19.0f},{0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f}},
+        {"Rock","rock","standard",{1.0f, -0.4f, 17.0f},{0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f}},
+        {"Trunk1","trunk","standard",{2.5f, -0.4f, 16.5f},{0.0f, 30.0f, 0.0f}, {1.0f, 1.0f, 1.0f}},
+        {"Trunk2","trunk","standard",{5.5f, -0.4f, 15.5f},{0.0f, 65.0f, 0.0f}, {1.0f, 1.0f, 1.0f}},
+        {"GreenTree1","greenTree","standard",{4.0f, -0.4f, 18.0f},{0.0f, 0.0f, 0.0f}, {0.5f, 0.5f, 0.5f}},
+        {"GreenTree2","greenTree","standard",{11.0f, -0.4f, 18.0f},{0.0f, 0.0f, 0.0f}, {0.5f, 0.5f, 0.5f}},
+        {"GreenTree3","greenTree","standard",{17.0f, -0.4f, 18.0f},{0.0f, 0.0f, 0.0f}, {0.5f, 0.5f, 0.5f}},
+        {"RedTree1","redTree","standard",{-17.0f, -0.4f, 18.0f},{0.0f, 0.0f, 0.0f}, {0.5f, 0.5f, 0.5f}},
+        {"RedTree2","redTree","standard",{-11.0f, -0.4f, 18.0f},{0.0f, 0.0f, 0.0f}, {0.5f, 0.5f, 0.5f}},
+        {"RedTree3","redTree","standard",{-4.0f, -0.4f, 18.0f},{0.0f, 0.0f, 0.0f}, {0.5f, 0.5f, 0.5f}},
     };
 
     std::vector<ObjectSpawnData> moveObjects = {
         {"Whale","whale","standard",{0.0f, 10.0f, -13.5f},{0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f}},
     };
+
     // 2. 通用的对象创建循环 (引擎逻辑)
     for (const auto& data : staticObjects) {
         GameObject* go = new GameObject(data.name, data.modelId, data.shaderId);

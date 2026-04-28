@@ -1,6 +1,7 @@
 **/build/
 **/test/
 **/assets/
+**/.cache/
 *.obj
 *.exe
 *.bat

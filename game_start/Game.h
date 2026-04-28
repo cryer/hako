@@ -3,7 +3,6 @@
 #include <GLFW/glfw3.h>
 #include <vector>
 #include <functional>
-#include <unordered_map>
 #include "camera.h"
 #include "Renderer.h"
 #include "GameObject.h"
@@ -25,7 +24,7 @@ public:
     std::vector<GameObject*> sceneObjects;
 
     AABB playerBox;
-
+    
     // 游戏全局状态
     glm::vec3 lightPos = glm::vec3(1.2f, 3.0f, 3.0f);
     glm::vec3 sunDir = glm::vec3(-0.2f, -1.0f, -0.3f);

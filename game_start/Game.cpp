@@ -291,7 +291,7 @@ void Game::Run() {
                  camera.Position  = (playerBox.min + playerBox.max) * 0.5f;
             }
         }
-
+        
 
         // --- 渲染流程开始 ---
         // 如果灯源旋转
@@ -320,7 +320,6 @@ void Game::Run() {
             // 1. 生成阴影贴图
             renderer->RenderShadowPass(sceneObjects, lightSpaceMatrix);
         }
-
         // 2. 主场景渲染
         renderer->RenderMainPass(sceneObjects, camera, lightSpaceMatrix, lightPos, sunDir, shadowOn, (float)width, (float)height);
         
