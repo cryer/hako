@@ -28,7 +28,8 @@ add_executable(game
 	GazeMenu.cpp 
 	DebugTerminal.cpp
 	stb_image_impl.cpp
-	AABB.cpp)
+	AABB.cpp
+	Frustum.cpp)
 
 target_link_libraries(game PRIVATE glad::glad glfw glm::glm assimp::assimp imgui::imgui)
 

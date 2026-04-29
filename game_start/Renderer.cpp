@@ -87,7 +87,8 @@ void Renderer::RenderMainPass(
         glm::vec3 sunDir, 
         bool shadowOn, 
         float screenWidth, 
-        float screenHeight) {
+        float screenHeight,
+        Frustum frustum) {
     glViewport(0, 0, screenWidth, screenHeight);
     glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -110,8 +111,9 @@ void Renderer::RenderMainPass(
     shader->setFloat("shininess", 32.0f);
 
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), screenWidth / screenHeight, 0.1f, 100.0f);
+    glm::mat4 view = camera.GetViewMatrix();
     shader->setMatrix4fv("projection", projection);
-    shader->setMatrix4fv("view", camera.GetViewMatrix());
+    shader->setMatrix4fv("view", view);
     shader->setMatrix4fv("lightSpaceMatrix", lightSpaceMatrix);
     shader->setBool("shadowOn", shadowOn);
 
@@ -119,9 +121,13 @@ void Renderer::RenderMainPass(
     glBindTexture(GL_TEXTURE_2D, depthMap);
     shader->setInt("shadowMap", 10);
 
+    frustum.update(projection * view);
+
     for (auto obj : objects) {
         // 如果不可见，跳过主场景渲染
         if (!obj->isVisible) continue; 
+        // 视锥体剔除(只剔除渲染部分，update和碰撞检测保持计算)
+        if (!frustum.isBoxVisible(obj->GetWorldAABB())) continue;
         obj->Draw(shader);
     }
 }

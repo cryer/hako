@@ -11,6 +11,7 @@
 #include "GazeMenu.h"
 #include "ResourceManager.h"
 #include "AABB.h"
+#include "Frustum.h"
 
 class Game {
 public:
@@ -24,6 +25,7 @@ public:
     std::vector<GameObject*> sceneObjects;
 
     AABB playerBox;
+    Frustum frustum;
     
     // 游戏全局状态
     glm::vec3 lightPos = glm::vec3(1.2f, 3.0f, 3.0f);

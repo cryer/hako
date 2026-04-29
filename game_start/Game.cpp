@@ -261,6 +261,7 @@ void Game::Run() {
 
         myMenu.Update(camera, deltaTime);
 
+
         // --- 玩家输入 ---
         if (!currentTerminalVisible) {
             ProcessInput();
@@ -321,7 +322,7 @@ void Game::Run() {
             renderer->RenderShadowPass(sceneObjects, lightSpaceMatrix);
         }
         // 2. 主场景渲染
-        renderer->RenderMainPass(sceneObjects, camera, lightSpaceMatrix, lightPos, sunDir, shadowOn, (float)width, (float)height);
+        renderer->RenderMainPass(sceneObjects, camera, lightSpaceMatrix, lightPos, sunDir, shadowOn, (float)width, (float)height,frustum);
         
         // 3. 其他环境渲染
         renderer->RenderFloor(camera, lightSpaceMatrix, lightPos, shadowOn, (float)width, (float)height);

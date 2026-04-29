@@ -6,6 +6,7 @@
 #include "camera.h"
 #include "GameObject.h"
 #include "AABB.h"
+#include "Frustum.h"
 
 class Renderer {
 private:
@@ -31,7 +32,8 @@ public:
                         glm::vec3 sunDir, 
                         bool shadowOn, 
                         float screenWidth, 
-                        float screenHeight);
+                        float screenHeight,
+                        Frustum frustum);
 
 
     void RenderFloor(Camera& camera, 
