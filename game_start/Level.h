@@ -5,7 +5,7 @@
 #include <nlohmann/json.hpp>
 
 #include "GameObject.h"
-// #include "Game.h"
+
 
 class Game;
 
@@ -31,6 +31,8 @@ public:
     
     // 将当前的 sceneObjects 保存到关卡 JSON 文件中
     bool Save(const std::string& filepath, const std::vector<GameObject*>& objects, const glm::vec3& currentSpawn);
+
+    void Unload(Game* game);
 
 private:
     GameObject* CreateObjectFromJson(const nlohmann::json& j);

@@ -60,24 +60,7 @@ public:
         {
             std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: " << e.what() << std::endl;
         }
-        /*
-        更优雅，更简洁的符合STL风格的写法，利用[beg，end）迭代器逐个拷贝字符
-        同样绕过 格式化层。和上面原理不同，上面是直接复制底层fstream原始缓冲区
-        到stringstream缓冲区，然后str()获取string数据
-        两者都读取所有字符，绕过格式化，性能相差不大，下面更简洁，上面更直观
-        std::istreambuf_iterator<char>()
-        其实就是默认内部指向streambuf的指针是nullptr，而在文件中就可以表示文件结束
-        而begin自然就是内部指向streambuf的指针指向file文件流底层的streambuf
-        （streambuf是原始缓冲区，分为i和o输入输出，往上抽象成filebuf，stringbuf等。
-        stream流内部包含buf缓冲，buf存储真正的数据，但本身是数据管理器而非单纯数据容器，流则进一步是buf的管理器，比如可以格式化输入输出等。
-        streambuf中除了stringbuf特殊外【直接str()获取】，其他buf中的数据不可以直接访问，都是protect属性，这是为了保证流的同步，buf如果通过指针直接读取了，破坏了状态，比如指针位置等，而buf的管理器也就是流是未知的。所以像rdbuf这样返回streambuf，其实也就是filebuf的指针，不能直接获取数据，而是要通过流操作获取，可以流入到任意的其他stream中，比如cout的ostream，ostringstream或者流入另一个ofstream。）
-        【其实都是直接操作底层缓冲区streambuf】
-        std::ifstream vShaderFile(vertexPath);
-        std::string vertexCode(
-            std::istreambuf_iterator<char>(file),
-            std::istreambuf_iterator<char>()
-        );
-        */
+ 
         const char* vShaderCode = vertexCode.c_str();
         const char * fShaderCode = fragmentCode.c_str();
         // 2. compile shaders

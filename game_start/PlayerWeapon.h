@@ -1,6 +1,7 @@
 #pragma once
 #include "GameObject.h"
 #include "camera.h"
+#include "utils.h"
 
 class PlayerWeapon : public GameObject {
 private:
@@ -10,9 +11,10 @@ private:
     const float FIRE_DURATION = 0.2f;
 
     glm::mat4 finalModelMatrix; // 覆写基类的绘制矩阵
+    WeaponConfig config;
 
 public:
-    PlayerWeapon(std::string n, std::string mod, std::string shd, Camera* cam);
+    PlayerWeapon(const WeaponConfig& cfg, Camera* cam);
 
     void Fire(float currentTime);
     void Update(float deltaTime) override;

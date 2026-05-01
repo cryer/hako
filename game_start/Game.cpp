@@ -7,7 +7,6 @@
 #include <imgui_impl_opengl3.h>
 
 
-
 // 全局静态指针，用于回调函数访问
 static Game* g_Game = nullptr; 
 
@@ -289,31 +288,58 @@ void Game::Run() {
         }
 
         // 玩家碰撞box 直接每帧创建一个对象就好 没什么性能消耗
-        playerBox = AABB::CreateFromCenterAndSize(camera.Position, glm::vec3(2.0f,2.0f,2.0f));
+        playerBox = AABB::CreateFromCenterAndSize(camera.Position, glm::vec3(0.5f,0.5f,0.5f));
         // cout << "Player AABB Min: (" << playerBox.min.x << ", " << playerBox.min.y << ", " << playerBox.min.z << ")" << endl;
+        // cout << "object vector size: " << sceneObjects.size() << endl;
+
+        std::string levelToLoad = "";
         
         // --- 游戏逻辑更新 (解耦重点：实体自己管自己的运算) ---
         for (auto obj : sceneObjects) {
+
+            if (obj->isTrigger) {
+                // 如果玩家的 AABB 和 触发器的 AABB 相交
+                if (playerBox.Intersects(obj->GetWorldAABB())) {
+                    levelToLoad = obj->targetLevel;
+                    break; // 找到目标立刻跳出循环，因为我们要切换关卡了
+                }
+            }
+
+
             // 同步全局 showGun 状态给具体武器
             if (obj->name == "M416") {
                 obj->isVisible = showGun;
-            }
+            }      
             
             // 只有当物体激活/可见时，才执行它的逻辑更新
             if (obj->isVisible) {
                 obj->Update(deltaTime);
             }
+
+             if (!obj->hasCollision) continue; // 直接跳过没有碰撞的物体
             /*
             ResolveCollision内部碰撞会反推第一个参数的box坐标
             利用反推box坐标更新camera相机位置
             */
-            if (!obj->hasCollision) continue; // 直接跳过没有碰撞的物体！
-
             if(ResolveCollision(playerBox, obj->GetWorldAABB())){
                  camera.Position  = (playerBox.min + playerBox.max) * 0.5f;
             }
         }
-        
+
+
+        // 执行关卡切换
+        if (!levelToLoad.empty()) {
+            std::cout << "Trigger activated! Loading next level: " << levelToLoad << std::endl;       
+            // a. 卸载当前关卡 (清理内存)
+            mapEditor.currentLevel.Unload(g_Game); 
+            // b. 加载新关卡
+            mapEditor.currentLevel.Load(levelToLoad, g_Game);
+            // c. 传送玩家到新关卡的出生点
+            camera.Position = mapEditor.currentLevel.playerSpawn;
+            // 可选：你可以在这里加个渐黑屏幕或者提示音
+        }
+ 
+      
 
         // --- 渲染流程开始 ---
         // 如果灯源旋转
@@ -343,7 +369,7 @@ void Game::Run() {
             renderer->RenderShadowPass(sceneObjects, lightSpaceMatrix);
         }
         // 2. 主场景渲染
-        renderer->RenderMainPass(sceneObjects, camera, lightSpaceMatrix, lightPos, sunDir, shadowOn, (float)width, (float)height,frustum);
+        renderer->RenderMainPass(sceneObjects, camera, lightSpaceMatrix, lightPos, sunDir, shadowOn, (float)width, (float)height, frustum);
         
         // 3. 其他环境渲染
         renderer->RenderFloor(camera, lightSpaceMatrix, lightPos, shadowOn, (float)width, (float)height);
@@ -370,7 +396,7 @@ void Game::Run() {
         if (mapEditor.isVisible){
             mapEditor.RenderUI(g_Game);
         }
-        
+      
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

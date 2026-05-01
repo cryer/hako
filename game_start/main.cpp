@@ -61,6 +61,8 @@ int main() {
     ResourceManager::LoadModel("redTree", "assets/scenes/environoment/WizardTree.obj");
     ResourceManager::LoadModel("trunk", "assets/scenes/environoment/Trunk_01.obj");
 
+    
+
 
     // ==========================================
     // === 使用数据驱动关卡系统 ===
@@ -72,6 +74,7 @@ int main() {
     然后开启本块代码直接load加载地图json数据即可
     */
     // ==========================================
+    
     Level levelManager;
 
     bool hasMap = levelManager.Load("assets/levels/level_01.json", &game);
@@ -97,14 +100,12 @@ int main() {
     //     {"Bike","moto","standard","static",{2.0f, -0.49f, 2.0f},{0.0f, 0.0f, 0.0f}, {0.2f, 0.2f, 0.2f}},
     //     {"Sk2","sk2","standard","static",{0.0f, -0.49f, 0.0f},{0.0f,   0.0f, 0.0f}, {0.2f, 0.2f, 0.2f}},
 
-    //     // 房子组
     //     {"House1","house1","standard","static",{-14.0f, -0.49f,  -6.0f}, {0.0f,  90.0f, 0.0f}, {2.0f, 2.0f, 2.0f}},
     //     {"House2","house1","standard","static",{-14.0f, -0.49f,  10.0f}, {0.0f,  90.0f, 0.0f}, {2.0f, 2.0f, 2.0f}},
     //     {"House3","house2","standard","static",{ 14.0f, -0.49f,  10.0f}, {0.0f, -90.0f, 0.0f}, {2.0f, 2.0f, 2.0f}},
     //     {"House4","house2","standard","static",{ 14.0f, -0.49f,  -6.0f}, {0.0f, -90.0f, 0.0f}, {2.0f, 2.0f, 2.0f}},
     //     {"House5","house1","standard","static",{  0.0f, -0.49f, -20.0f}, {0.0f,   0.0f, 0.0f}, {2.0f, 2.0f, 2.0f}},
         
-    //     // 杂物组 
     //     {"Barrel1", "barrel1", "standard","static",{17.0f, -0.49f,  0.0f}},
     //     {"Barrel2", "barrel2", "standard","static",{16.5f, -0.49f,  0.5f}},
     //     {"Crate1",  "crate1",  "standard","static",{18.0f, -0.49f,  0.2f}},
@@ -122,6 +123,12 @@ int main() {
     //     {"RedTree2","redTree","standard","static",{-11.0f, -0.4f, 18.0f},{0.0f, 0.0f, 0.0f}, {0.5f, 0.5f, 0.5f}},
     //     {"RedTree3","redTree","standard","static",{-4.0f, -0.4f, 18.0f},{0.0f, 0.0f, 0.0f}, {0.5f, 0.5f, 0.5f}},
     //     {"Whale","whale","standard","animal",{0.0f, 10.0f, -13.5f},{0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f}},
+    //     // {"RedTree4","redTree","standard","static",{-4.0f, -0.4f, 18.0f},{0.0f, 0.0f, 0.0f}, {0.5f, 0.5f, 0.5f}},
+    //     // {"RedTree5","redTree","standard","static",{-4.0f, -0.4f, 18.0f},{0.0f, 0.0f, 0.0f}, {0.5f, 0.5f, 0.5f}},
+    //     // {"RedTree6","redTree","standard","static",{-4.0f, -0.4f, 18.0f},{0.0f, 0.0f, 0.0f}, {0.5f, 0.5f, 0.5f}},
+    //     // {"RedTree7","redTree","standard","static",{-4.0f, -0.4f, 18.0f},{0.0f, 0.0f, 0.0f}, {0.5f, 0.5f, 0.5f}},
+    //     // {"RedTree8","redTree","standard","static",{-4.0f, -0.4f, 18.0f},{0.0f, 0.0f, 0.0f}, {0.5f, 0.5f, 0.5f}},
+    //     // {"RedTree9","redTree","standard","static",{-4.0f, -0.4f, 18.0f},{0.0f, 0.0f, 0.0f}, {0.5f, 0.5f, 0.5f}},
     // };
 
     // // 2. 通用的对象创建循环 (引擎逻辑)
@@ -146,10 +153,24 @@ int main() {
     //     game.AddObject(go);
     // }
 
+
+    // ResourceManager::LoadModel("gun", "assets/models/gun_pack/SMG_Full_East.obj", false);
+
+    // GameObject* go = new GameObject("Gun", "gun", "standard");
+    // go->transform.position = glm::vec3(0.2f, 2.0f, 1.0f);
+    // // go->transform.rotation = glm::vec3(0.2f);
+    // go->transform.scale = glm::vec3(2.0f);
+    // game.AddObject(go);
+
+    WeaponConfig m416("M416", "m416", "standard",{0.5f, -2.0f, -1.5f},{-10.0f,190.0f,0.0f},{0.2f,0.2f,0.2f});
+
+    PlayerWeapon* m4 = new PlayerWeapon(m416, &game.camera);
+    game.AddObject(m4);
+
     // 3. 添加具有“特殊独立逻辑”的玩家武器
-    PlayerWeapon* gun = new PlayerWeapon("M416", "m416", "standard", &game.camera);
-    gun->transform.scale = glm::vec3(0.2f); 
-    game.AddObject(gun);
+    // PlayerWeapon* gun = new PlayerWeapon("M416", "m416", "standard", &game.camera);
+    // gun->transform.scale = glm::vec3(0.2f); 
+    // game.AddObject(gun);
  
     // 7. 启动游戏主循环！
     game.Run();

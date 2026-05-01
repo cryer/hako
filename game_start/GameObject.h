@@ -38,6 +38,11 @@ public:
     bool isDynamic = false;
     bool hasCollision = false; // 默认不参与碰撞
 
+    // === 生命周期与触发器属性 ===
+    bool isPersistent = false; // 是否是持久对象（切关卡时不销毁，比如玩家武器）
+    bool isTrigger = false;    // 是否是触发器区域（隐形，仅用于检测相交）
+    std::string targetLevel;   // 触发器指向的下一关卡路径（例如 "assets/levels/level_02.json"）
+
     GameObject(std::string n, std::string mod, std::string shd) 
         : name(n), modelName(mod), shaderName(shd) {}
     virtual ~GameObject() = default;

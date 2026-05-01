@@ -3,7 +3,7 @@
 #include "GameObject.h"
 
 
-// 【修复循环包含】：前向声明 Game 类
+// 前向声明 Game 类
 class Game;
 
 

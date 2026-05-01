@@ -71,7 +71,7 @@ void Renderer::RenderShadowPass(
     for (auto obj : objects) {
         // 如果不可见，直接跳过生成阴影
         if (!obj->isVisible) continue; 
-        if(obj->name != "M416") // 武器不需要投射阴影
+        if(obj->name != "M416") // 武器不需要投射阴影(硬编码，待优化#TODO)
             obj->Draw(depthShader);
     }
 
@@ -125,7 +125,7 @@ void Renderer::RenderMainPass(
     // 主要场景模型做视锥体剔除，其他地板之类的渲染可以忽略
     for (auto obj : objects) {
         // 如果不可见，跳过主场景渲染
-        if (!obj->isVisible) continue; 
+        if (!obj->isVisible) continue;
         // 视锥体剔除(只剔除渲染部分，update和碰撞检测保持计算
         // 否则不在视野中的实体就不更新逻辑了以及倒着走
         // 就能无视碰撞。主要节省大量的drawcall)

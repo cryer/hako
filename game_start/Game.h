@@ -15,6 +15,8 @@
 #include "Level.h"
 #include "LevelEditor.h"
 
+#include "utils.h"
+
 
 class Game {
 public:
@@ -31,7 +33,7 @@ public:
     Frustum frustum;
 
     LevelEditor mapEditor;
-    int currentLevel = 1;
+
     
     // 游戏全局状态
     glm::vec3 lightPos = glm::vec3(1.2f, 3.0f, 3.0f);
@@ -41,7 +43,7 @@ public:
     const float lightRadius = 2.5f;  // 公转半径
     const float lightHeight = 3.0f;  // Y轴高度（可选）
 
-    bool showGun = false;
+    bool showGun = true;
     bool shadowOn = false;
     bool showBox = false;
     

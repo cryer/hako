@@ -60,43 +60,78 @@ bool Level::Save(const std::string& filepath, const std::vector<GameObject*>& ob
     return false;
 }
 
+void Level::Unload(Game* game) {
+    // 遍历场景对象，删除非持久化的对象
+    for (auto it = game->sceneObjects.begin(); it != game->sceneObjects.end(); ) {
+        GameObject* obj = *it;
+        if (!obj->isPersistent) {
+            delete obj; // 释放内存
+            it = game->sceneObjects.erase(it); // 从列表中移除
+        } else {
+            ++it; // 保留持久化对象
+        }
+    }
+}
+
 GameObject* Level::CreateObjectFromJson(const nlohmann::json& j) {
     std::string name = j.value("name", "Object");
-    std::string modelId = j.value("model", "");
-    std::string shaderId = j.value("shader", "standard");
-    std::string type = j.value("type", "static");
 
+    bool isTrigger = j.value("isTrigger", false);
     GameObject* go = nullptr;
-    
-    // 支持你原有的不同派生类，这就是工厂模式的雏形
-    if (type == "animal") {
-        go = new Animal(name, modelId, shaderId); // 如果你有Animal类
+    if (isTrigger) {
+        // 触发器不需要模型和着色器
+        go = new GameObject(name, "", "");
+        go->isTrigger = true;
+        go->hasCollision = false;
+        go->targetLevel = j.value("target_level", "");
+        // 给触发器一个默认大小的包围盒，后续可缩放
+        go->localAABB.min = glm::vec3(-1.0f);
+        go->localAABB.max = glm::vec3(1.0f);
+        go->transform.position = j.value("pos", glm::vec3(0.0f));
+        go->transform.rotation = j.value("rot", glm::vec3(0.0f));
+        go->transform.scale = j.value("scale", glm::vec3(1.0f));
     } else {
-        go = new GameObject(name, modelId, shaderId);
+        std::string modelId = j.value("model", "");
+        std::string shaderId = j.value("shader", "standard");
+        std::string type = j.value("type", "static");
+
+        // 支持你原有的不同派生类，这就是工厂模式的雏形
+        if (type == "animal") {
+            go = new Animal(name, modelId, shaderId); // 如果你有Animal类
+        } else {
+            go = new GameObject(name, modelId, shaderId);
+        }
+
+        go->transform.position = j.value("pos", glm::vec3(0.0f));
+        go->transform.rotation = j.value("rot", glm::vec3(0.0f));
+        go->transform.scale = j.value("scale", glm::vec3(1.0f));
+
+        Model* model = ResourceManager::GetModel(go->modelName);
+        if (model && model->calculateAABB) {
+            go->localAABB = model->localAABB;
+            go->hasCollision = true;
+        }
     }
-
-    go->transform.position = j.value("pos", glm::vec3(0.0f));
-    go->transform.rotation = j.value("rot", glm::vec3(0.0f));
-    go->transform.scale = j.value("scale", glm::vec3(1.0f));
-
-    Model* model = ResourceManager::GetModel(go->modelName);
-    if (model && model->calculateAABB) {
-        go->localAABB = model->localAABB;
-        go->hasCollision = true;
-    }
-
     return go;
 }
 
 nlohmann::json Level::CreateJsonFromObject(GameObject* obj) {
     json j;
     j["name"] = obj->name;
-    j["model"] = obj->modelName;
-    j["shader"] = obj->shaderName;
     j["pos"] = obj->transform.position;
     j["rot"] = obj->transform.rotation;
     j["scale"] = obj->transform.scale;
     // 简单区分类型
     j["type"] = obj->type.c_str();
+    j["isTrigger"] = obj->isTrigger;
+
+    if (obj->isTrigger) {
+        j["target_level"] = obj->targetLevel;
+    } else {
+        j["model"] = obj->modelName;
+        j["shader"] = obj->shaderName;
+        j["collision"] = obj->hasCollision;
+    }
+
     return j;
 }

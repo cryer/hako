@@ -1,8 +1,11 @@
 #include "PlayerWeapon.h"
 #include <GLFW/glfw3.h>
+#include <iostream>
 
-PlayerWeapon::PlayerWeapon(std::string n, std::string mod, std::string shd, Camera* cam)
-    : GameObject(n, mod, shd), mainCamera(cam) {}
+PlayerWeapon::PlayerWeapon(const WeaponConfig& cfg, Camera* cam)
+    : GameObject(cfg.name, cfg.modelId, cfg.shaderId), mainCamera(cam), config(cfg) {
+        isPersistent = true;
+    }
 
 void PlayerWeapon::Fire(float currentTime) {
     if (!isFiring) {
@@ -10,6 +13,7 @@ void PlayerWeapon::Fire(float currentTime) {
         fireStartTime = currentTime;
     }
 }
+
 
 void PlayerWeapon::Update(float deltaTime) {
     glm::vec3 recoilOffset(0.0f);
@@ -29,7 +33,7 @@ void PlayerWeapon::Update(float deltaTime) {
     }
 
     // 枪支位置运算
-    glm::vec3 weaponOffset(0.5f, -2.0f, -1.5f);
+    glm::vec3 weaponOffset = config.weaponOffset;
     weaponOffset.y += recoilOffset.y;
     weaponOffset.z += recoilOffset.z;
 
@@ -37,15 +41,16 @@ void PlayerWeapon::Update(float deltaTime) {
     glm::vec4 worldPos = cameraWorld * glm::vec4(weaponOffset, 1.0f);
     glm::mat3 cameraRot = glm::mat3(cameraWorld);
 
-    // 模型局部旋转修正
-    glm::mat4 weaponLocalRot = glm::rotate(glm::mat4(1.0f), glm::radians(190.0f), glm::vec3(0.0f, 1.0f, 0.0f))
-                             * glm::rotate(glm::mat4(1.0f), glm::radians(-10.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
+    glm::mat4 weaponLocalRot = glm::rotate(glm::mat4(1.0f), glm::radians(config.rotation.y), glm::vec3(0.0f, 1.0f, 0.0f))
+                             * glm::rotate(glm::mat4(1.0f), glm::radians(config.rotation.x), glm::vec3(1.0f, 0.0f, 0.0f))
+                             * glm::rotate(glm::mat4(1.0f), glm::radians(config.rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 
     // 计算出跟随相机的最终矩阵
     finalModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(worldPos))
                      * glm::mat4(cameraRot)
                      * weaponLocalRot
-                     * glm::scale(glm::mat4(1.0f), transform.scale);
+                     * glm::scale(glm::mat4(1.0f), config.scale);
 }
 
 void PlayerWeapon::Draw(Shader* overrideShader) {

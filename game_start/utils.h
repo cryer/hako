@@ -25,3 +25,27 @@ struct ObjectSpawnData {
                     glm::vec3 sca = glm::vec3(1.0f))
         : name(n), modelId(m), shaderId(s), type(t), position(pos), rotation(rot), scale(sca) {}
 };
+
+
+struct WeaponConfig {
+    std::string name;
+    std::string modelId;
+    std::string shaderId;
+
+    glm::vec3 weaponOffset;
+    glm::vec3 rotation; 
+    glm::vec3 scale;
+
+    WeaponConfig(const WeaponConfig& other) = default;
+    WeaponConfig& operator=(const WeaponConfig&) = default;
+    // 构造函数，方便快速填写数据，默认缩放为 1，旋转为 0
+    WeaponConfig(std::string n, 
+                    std::string m, 
+                    std::string s,
+                    glm::vec3 pos = glm::vec3(0.5f, -2.0f, -1.5f), 
+                    glm::vec3 rot = glm::vec3(0.0f), 
+                    glm::vec3 sca = glm::vec3(1.0f))
+        : name(n), modelId(m), shaderId(s), weaponOffset(pos), rotation(rot), scale(sca) {}
+
+    
+};
