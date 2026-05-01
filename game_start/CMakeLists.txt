@@ -15,8 +15,8 @@ find_package(ASSIMP REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 
 find_path(STB_INCLUDE_DIRS "stb_image.h") 
-# 包含目录
 include_directories(${STB_INCLUDE_DIRS})
+
 
 add_executable(game 
 	main.cpp
@@ -29,7 +29,9 @@ add_executable(game
 	DebugTerminal.cpp
 	stb_image_impl.cpp
 	AABB.cpp
-	Frustum.cpp)
+	Frustum.cpp
+	Level.cpp
+	LevelEditor.cpp)
 
 target_link_libraries(game PRIVATE glad::glad glfw glm::glm assimp::assimp imgui::imgui)
 

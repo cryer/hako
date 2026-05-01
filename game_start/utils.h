@@ -9,16 +9,19 @@ struct ObjectSpawnData {
     std::string name;
     std::string modelId;
     std::string shaderId;
+    std::string type;
     glm::vec3 position;
     glm::vec3 rotation; // 欧拉角 (Pitch, Yaw, Roll)
     glm::vec3 scale;
 
+
     // 构造函数，方便快速填写数据，默认缩放为 1，旋转为 0
     ObjectSpawnData(std::string n, 
                     std::string m, 
-                    std::string s, 
+                    std::string s,
+                    std::string t,
                     glm::vec3 pos, 
                     glm::vec3 rot = glm::vec3(0.0f), 
                     glm::vec3 sca = glm::vec3(1.0f))
-        : name(n), modelId(m), shaderId(s), position(pos), rotation(rot), scale(sca) {}
+        : name(n), modelId(m), shaderId(s), type(t), position(pos), rotation(rot), scale(sca) {}
 };

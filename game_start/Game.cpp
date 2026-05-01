@@ -5,7 +5,7 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
-#include <windows.h>
+
 
 
 // 全局静态指针，用于回调函数访问
@@ -16,7 +16,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 }
 
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
-    if (!g_Game || g_Game->terminal.GetVisible()) return;
+    if (!g_Game || g_Game->terminal.GetVisible() || g_Game->mapEditor.isVisible) return;
     float xpos = static_cast<float>(xposIn);
     float ypos = static_cast<float>(yposIn);
     if (g_Game->firstMouse) { g_Game->lastX = xpos; g_Game->lastY = ypos; g_Game->firstMouse = false; }
@@ -28,7 +28,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-    if (!g_Game || g_Game->terminal.GetVisible()) return;
+    if (!g_Game || g_Game->terminal.GetVisible() || g_Game->mapEditor.isVisible) return;
     g_Game->camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
 
@@ -157,6 +157,7 @@ bool Game::Init(const char* title) {
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
     // 2. 初始化 GLAD
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -222,6 +223,7 @@ void Game::Run() {
 
     static bool mKeyPressed = false;
     static bool eKeyPressed = false;
+    static bool qKeyPressed = false;
 
 
     while (!glfwWindowShouldClose(window)) {
@@ -245,15 +247,34 @@ void Game::Run() {
                 glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             } else {
                 glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+                // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
                 firstMouse = true; 
             }
             lastTerminalVisible = currentTerminalVisible;
         }
 
-        // --- GazeMenu 输入与逻辑 ---
+        // 处理地图编辑器造成的的鼠标状态变更
+        bool currentEditorVisible = mapEditor.isVisible;
+        if (currentEditorVisible != lastEditorVisible) {
+            if (currentEditorVisible) {
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            } else {
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+                // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+                firstMouse = true; 
+            }
+            lastEditorVisible = currentEditorVisible;
+        }
+
+        // 切换地图编辑器状态(消抖)
         if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS) {
-            if (!mKeyPressed) { myMenu.Toggle(camera); mKeyPressed = true; }
+            if (!mKeyPressed) { mapEditor.isVisible = !mapEditor.isVisible; mKeyPressed = true; }
         } else mKeyPressed = false;
+
+        // --- GazeMenu 输入与逻辑 ---
+        if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
+            if (!qKeyPressed) { myMenu.Toggle(camera); qKeyPressed = true; }
+        } else qKeyPressed = false;
 
         if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
             if (!eKeyPressed) { myMenu.Interact(); eKeyPressed = true; }
@@ -337,11 +358,19 @@ void Game::Run() {
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)width / (float)height, 0.1f, 100.0f);
         myMenu.Draw(*ResourceManager::GetShader("menu"), camera.GetViewMatrix(), projection);
 
+
+
         // 5. 渲染 ImGui 调试面板
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
+
         terminal.Draw();
+        // 渲染地图编辑器
+        if (mapEditor.isVisible){
+            mapEditor.RenderUI(g_Game);
+        }
+        
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

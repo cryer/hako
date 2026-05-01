@@ -12,6 +12,9 @@
 #include "ResourceManager.h"
 #include "AABB.h"
 #include "Frustum.h"
+#include "Level.h"
+#include "LevelEditor.h"
+
 
 class Game {
 public:
@@ -26,6 +29,9 @@ public:
 
     AABB playerBox;
     Frustum frustum;
+
+    LevelEditor mapEditor;
+    int currentLevel = 1;
     
     // 游戏全局状态
     glm::vec3 lightPos = glm::vec3(1.2f, 3.0f, 3.0f);
@@ -44,6 +50,7 @@ public:
     float lastX, lastY;
     bool firstMouse = true;
     bool lastTerminalVisible = false;
+    bool lastEditorVisible = false;
 
     Game(int w, int h);
     ~Game();

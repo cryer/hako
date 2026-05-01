@@ -31,6 +31,7 @@ public:
     Transform transform;
     std::string modelName;
     std::string shaderName;
+    std::string type = "static";
 
     AABB localAABB;  
     bool isVisible = true;
