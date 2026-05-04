@@ -5,6 +5,7 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+#include <algorithm>
 
 
 // 全局静态指针，用于回调函数访问
@@ -376,6 +377,19 @@ void Game::Run() {
         std::vector<GameObject*> visibleObjects;
         sceneTree->Query(cameraViewRect, visibleObjects);
         // 然后下面所有的object渲染，都使用visibleObjects，而不是sceneObjects
+
+        // ==========================================
+        // === 优化：按着色器与模型进行状态排序（批处理）===
+        // ==========================================
+        std::sort(visibleObjects.begin(), visibleObjects.end(),[](GameObject* a, GameObject* b) {
+            // 第一优先级：按 Shader 排序 (减少 glUseProgram 调用)
+            if (a->shaderName != b->shaderName) {
+                // std::string是可以直接按字典序比较大小的，有重载运算符实现
+                return a->shaderName < b->shaderName;
+            }
+            // 第二优先级：按 模型 排序 (减少 VAO/VBO 切换)
+            return a->modelName < b->modelName;
+        });
       
 
         // --- 渲染流程开始 ---
