@@ -59,12 +59,17 @@ Game::Game(int w, int h) : width(w), height(h), camera(glm::vec3(0.0f, 3.0f, 3.0
     g_Game = this;
     lastX = w / 2.0f;
     lastY = h / 2.0f;
+
+    // 创建一个足够大的初始边界 (比如 -1000 到 1000 的地图)
+    sceneTree = new QuadTree(0, {-1000.0f, -1000.0f, 1000.0f, 1000.0f});
 }
 
 Game::~Game() {
     ResourceManager::Clear();
     for (auto obj : sceneObjects) delete obj;
     delete renderer;
+    delete sceneTree;
+
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
@@ -287,25 +292,34 @@ void Game::Run() {
             ProcessInput();
         }
 
+
+        // ==========================================
+        // 每帧重建四叉树 (超级轻量，解决动态更新和编辑器拖动)
+        // ==========================================
+        sceneTree->Clear();
+        for (GameObject* obj : sceneObjects) {
+            sceneTree->Insert(obj);
+        }
+
+
         // 玩家碰撞box 直接每帧创建一个对象就好 没什么性能消耗
         playerBox = AABB::CreateFromCenterAndSize(camera.Position, glm::vec3(0.5f,0.5f,0.5f));
         // cout << "Player AABB Min: (" << playerBox.min.x << ", " << playerBox.min.y << ", " << playerBox.min.z << ")" << endl;
         // cout << "object vector size: " << sceneObjects.size() << endl;
 
+        // ==========================================
+        // 2物理与触发器检测 (从遍历全部，变成只查附近)
+        // ==========================================
+        // 将玩家包围盒转为 2D 矩形
+        Rect2D playerRect = {playerBox.min.x, playerBox.min.z, playerBox.max.x, playerBox.max.z};
+        std::vector<GameObject*> nearPlayerObjects;
+        sceneTree->Query(playerRect, nearPlayerObjects);
+
         std::string levelToLoad = "";
         
         // --- 游戏逻辑更新 (解耦重点：实体自己管自己的运算) ---
         for (auto obj : sceneObjects) {
-
-            if (obj->isTrigger) {
-                // 如果玩家的 AABB 和 触发器的 AABB 相交
-                if (playerBox.Intersects(obj->GetWorldAABB())) {
-                    levelToLoad = obj->targetLevel;
-                    break; // 找到目标立刻跳出循环，因为我们要切换关卡了
-                }
-            }
-
-
+        
             // 同步全局 showGun 状态给具体武器
             if (obj->name == "M416") {
                 obj->isVisible = showGun;
@@ -315,8 +329,18 @@ void Game::Run() {
             if (obj->isVisible) {
                 obj->Update(deltaTime);
             }
+        }
+        // 更新逻辑还是全局，只有碰撞检测用四叉树查询附近
+        for (auto obj : nearPlayerObjects) {
+            if (obj->isTrigger) {
+                // 如果玩家的 AABB 和 触发器的 AABB 相交
+                if (playerBox.Intersects(obj->GetWorldAABB())) {
+                    levelToLoad = obj->targetLevel;
+                    break; // 找到目标立刻跳出循环，因为我们要切换关卡了
+                }
+            }
 
-             if (!obj->hasCollision) continue; // 直接跳过没有碰撞的物体
+            if (!obj->hasCollision) continue; // 直接跳过没有碰撞的物体
             /*
             ResolveCollision内部碰撞会反推第一个参数的box坐标
             利用反推box坐标更新camera相机位置
@@ -391,7 +415,9 @@ void Game::Run() {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
+ 
         terminal.Draw();
+
         // 渲染地图编辑器
         if (mapEditor.isVisible){
             mapEditor.RenderUI(g_Game);

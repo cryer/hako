@@ -31,7 +31,8 @@ add_executable(game
 	AABB.cpp
 	Frustum.cpp
 	Level.cpp
-	LevelEditor.cpp)
+	LevelEditor.cpp
+	QuadTree.cpp)
 
 target_link_libraries(game PRIVATE glad::glad glfw glm::glm assimp::assimp imgui::imgui)
 

@@ -14,6 +14,7 @@
 #include "Frustum.h"
 #include "Level.h"
 #include "LevelEditor.h"
+#include "QuadTree.h"
 
 #include "utils.h"
 
@@ -34,6 +35,8 @@ public:
 
     LevelEditor mapEditor;
 
+    QuadTree* sceneTree;
+
     
     // 游戏全局状态
     glm::vec3 lightPos = glm::vec3(1.2f, 3.0f, 3.0f);
@@ -43,7 +46,7 @@ public:
     const float lightRadius = 2.5f;  // 公转半径
     const float lightHeight = 3.0f;  // Y轴高度（可选）
 
-    bool showGun = true;
+    bool showGun = false;
     bool shadowOn = false;
     bool showBox = false;
     

@@ -162,6 +162,7 @@ int main() {
     // go->transform.scale = glm::vec3(2.0f);
     // game.AddObject(go);
 
+
     WeaponConfig m416("M416", "m416", "standard",{0.5f, -2.0f, -1.5f},{-10.0f,190.0f,0.0f},{0.2f,0.2f,0.2f});
 
     PlayerWeapon* m4 = new PlayerWeapon(m416, &game.camera);

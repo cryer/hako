@@ -1,6 +1,5 @@
 #include "PlayerWeapon.h"
 #include <GLFW/glfw3.h>
-#include <iostream>
 
 PlayerWeapon::PlayerWeapon(const WeaponConfig& cfg, Camera* cam)
     : GameObject(cfg.name, cfg.modelId, cfg.shaderId), mainCamera(cam), config(cfg) {
