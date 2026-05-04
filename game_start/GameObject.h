@@ -26,6 +26,12 @@ struct Transform {
 };
 
 class GameObject {
+private:
+    // AABB 缓存变量
+    AABB _cachedGlobalAABB;
+    glm::vec3 _lastPos = glm::vec3(0.0f);
+    glm::vec3 _lastScale = glm::vec3(0.0f); // 初始故意给不同值触发首次计算
+
 public:
     std::string name;
     Transform transform;
@@ -48,9 +54,17 @@ public:
     virtual ~GameObject() = default;
 
     // 统一接口：获取当前世界空间 AABB
-    AABB GetWorldAABB() const {
+    // === 优化：全局 AABB 缓存 ===
+    AABB GetWorldAABB()  {
         // 静态物体、动态物体：实时变换到世界空间
-        return localAABB.GetTransformed(transform.GetMatrix());
+        // 只有在位置或缩放发生改变时（比如编辑器拖拽，或物体移动），才重新计算
+        if (transform.position != _lastPos || transform.scale != _lastScale) {
+
+            _cachedGlobalAABB = localAABB.GetTransformed(transform.GetMatrix());
+            _lastPos = transform.position;
+            _lastScale = transform.scale;
+        }
+        return _cachedGlobalAABB;  
     }
 
     virtual void Update(float deltaTime) {} // 子类可重写逻辑
