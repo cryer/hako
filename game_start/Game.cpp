@@ -363,6 +363,19 @@ void Game::Run() {
             // 可选：你可以在这里加个渐黑屏幕或者提示音
         }
  
+        // ==========================================
+        // 渲染剔除优化
+        // ==========================================
+        // 给摄像机定一个可见范围（比如周围 80 米的矩形框）
+        float viewDist = 20.0f; 
+        Rect2D cameraViewRect = {
+            camera.Position.x - viewDist, camera.Position.z - viewDist,
+            camera.Position.x + viewDist, camera.Position.z + viewDist
+        };
+
+        std::vector<GameObject*> visibleObjects;
+        sceneTree->Query(cameraViewRect, visibleObjects);
+        // 然后下面所有的object渲染，都使用visibleObjects，而不是sceneObjects
       
 
         // --- 渲染流程开始 ---
@@ -390,17 +403,22 @@ void Game::Run() {
             // glm::mat4 lightView = glm::lookAt(dirLightPos, dirLightTarget, glm::vec3(0.0, 1.0, 0.0));
             lightSpaceMatrix = lightProjection * lightView;
             // 1. 生成阴影贴图
-            renderer->RenderShadowPass(sceneObjects, lightSpaceMatrix);
+            // renderer->RenderShadowPass(sceneObjects, lightSpaceMatrix);
+            // 使用visibleObjects渲染可见范围内模型
+            renderer->RenderShadowPass(visibleObjects, lightSpaceMatrix);
         }
         // 2. 主场景渲染
-        renderer->RenderMainPass(sceneObjects, camera, lightSpaceMatrix, lightPos, sunDir, shadowOn, (float)width, (float)height, frustum);
+        // renderer->RenderMainPass(sceneObjects, camera, lightSpaceMatrix, lightPos, sunDir, shadowOn, (float)width, (float)height, frustum);
+        // 使用visibleObjects渲染可见范围内模型
+        renderer->RenderMainPass(visibleObjects, camera, lightSpaceMatrix, lightPos, sunDir, shadowOn, (float)width, (float)height, frustum);
         
         // 3. 其他环境渲染
         renderer->RenderFloor(camera, lightSpaceMatrix, lightPos, shadowOn, (float)width, (float)height);
         renderer->RenderLightCube(camera, lightPos, dirLightPos,(float)width, (float)height);
         renderer->RenderSkybox(camera, (float)width, (float)height);
         if (showBox){
-            renderer->RenderAABBs(sceneObjects, camera, (float)width, (float)height);
+            // renderer->RenderAABBs(sceneObjects, camera, (float)width, (float)height);
+            renderer->RenderAABBs(visibleObjects, camera, (float)width, (float)height);
         }
 
      
