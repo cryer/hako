@@ -65,14 +65,10 @@ Game::Game(int w, int h) : width(w), height(h),
     g_Game = this;
     lastX = w / 2.0f;
     lastY = h / 2.0f;
-
-    // 创建一个足够大的初始边界 (比如 -1000 到 1000 的地图)
-    // sceneTree = new QuadTree(0, {-1000.0f, -1000.0f, 1000.0f, 1000.0f});
 }
 
 Game::~Game() {
     ResourceManager::Clear();
-    for (auto obj : sceneObjects) delete obj;
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
@@ -217,7 +213,7 @@ void Game::ProcessInput() {
 
     // 触发武器开火
     if (showGun && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-        for (auto obj : sceneObjects) {
+        for (auto obj : mapEditor.currentLevel._objects) {
             PlayerWeapon* weapon = dynamic_cast<PlayerWeapon*>(obj);
             if (weapon) {
                 weapon->Fire(static_cast<float>(glfwGetTime()));
@@ -302,15 +298,13 @@ void Game::Run() {
         // 每帧重建四叉树 (超级轻量，解决动态更新和编辑器拖动)
         // ==========================================
         sceneTree.Clear();
-        for (GameObject* obj : sceneObjects) {
+        for (auto obj : mapEditor.currentLevel._objects) {
             sceneTree.Insert(obj);
         }
 
 
         // 玩家碰撞box 直接每帧创建一个对象就好 没什么性能消耗
         playerBox = AABB::CreateFromCenterAndSize(camera.Position, glm::vec3(0.5f,0.5f,0.5f));
-        // cout << "Player AABB Min: (" << playerBox.min.x << ", " << playerBox.min.y << ", " << playerBox.min.z << ")" << endl;
-        // cout << "object vector size: " << sceneObjects.size() << endl;
 
         // ==========================================
         // 2物理与触发器检测 (从遍历全部，变成只查附近)
@@ -323,7 +317,7 @@ void Game::Run() {
         std::string levelToLoad = "";
         
         // --- 游戏逻辑更新 (解耦重点：实体自己管自己的运算) ---
-        for (auto obj : sceneObjects) {
+        for (auto& obj : mapEditor.currentLevel._objects) {
         
             // 同步全局 showGun 状态给具体武器
             if (obj->name == "M416") {
@@ -356,27 +350,27 @@ void Game::Run() {
         }
 
 
-        // 执行关卡切换（这里四叉树应该重建一下）
+        // 执行关卡切换（四叉树也应该重建一下）
         if (!levelToLoad.empty()) {
             std::cout << "Trigger activated! Loading next level: " << levelToLoad << std::endl;       
-            // a. 卸载当前关卡 (清理内存)
-            mapEditor.currentLevel.Unload(g_Game); 
-            // b. 加载新关卡
-            mapEditor.currentLevel.Load(levelToLoad, g_Game);
-            // c. 传送玩家到新关卡的出生点
+            // 卸载当前关卡 (清理内存)
+            mapEditor.currentLevel.Unload(); 
+            // 加载新关卡
+            mapEditor.currentLevel.Load(levelToLoad);
+            // 传送玩家到新关卡的出生点
             camera.Position = mapEditor.currentLevel.playerSpawn;
-            // 可选：你可以在这里加个渐黑屏幕或者提示音
+            // 你可以在这里加个渐黑屏幕或者提示音
 
             sceneTree.Clear();
-            for (GameObject* obj : sceneObjects) {
-                sceneTree.Insert(obj);
-            }
+            for (GameObject* obj : mapEditor.currentLevel._objects) {
+            sceneTree.Insert(obj);
+        }
         }
  
         // ==========================================
         // 渲染剔除优化
         // ==========================================
-        // 给摄像机定一个可见范围（比如周围 80 米的矩形框）
+        // 给摄像机定一个可见范围（比如周围 20 米的矩形框）
         float viewDist = 20.0f; 
         Rect2D cameraViewRect = {
             camera.Position.x - viewDist, camera.Position.z - viewDist,
@@ -426,12 +420,10 @@ void Game::Run() {
             // glm::mat4 lightView = glm::lookAt(dirLightPos, dirLightTarget, glm::vec3(0.0, 1.0, 0.0));
             lightSpaceMatrix = lightProjection * lightView;
             // 1. 生成阴影贴图
-            // renderer->RenderShadowPass(sceneObjects, lightSpaceMatrix);
             // 使用visibleObjects渲染可见范围内模型
             renderer->RenderShadowPass(visibleObjects, lightSpaceMatrix);
         }
         // 2. 主场景渲染
-        // renderer->RenderMainPass(sceneObjects, camera, lightSpaceMatrix, lightPos, sunDir, shadowOn, (float)width, (float)height, frustum);
         // 使用visibleObjects渲染可见范围内模型
         renderer->RenderMainPass(visibleObjects, camera, lightSpaceMatrix, lightPos, sunDir, shadowOn, (float)width, (float)height, frustum);
         
@@ -440,7 +432,6 @@ void Game::Run() {
         renderer->RenderLightCube(camera, lightPos, dirLightPos,(float)width, (float)height);
         renderer->RenderSkybox(camera, (float)width, (float)height);
         if (showBox){
-            // renderer->RenderAABBs(sceneObjects, camera, (float)width, (float)height);
             renderer->RenderAABBs(visibleObjects, camera, (float)width, (float)height);
         }
 

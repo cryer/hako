@@ -6,7 +6,16 @@
 
 using json = nlohmann::json;
 
-bool Level::Load(const std::string& filepath, Game* game) {
+Level::~Level(){
+    for (auto it = _objects.begin(); it != _objects.end(); ) {
+        GameObject* obj = *it;
+        delete obj; // 释放内存
+        _objects.erase(it); // 从列表中移除   
+    }
+}
+
+
+bool Level::Load(const std::string& filepath) {
     std::ifstream file(filepath);
     if (!file.is_open()) {
         std::cerr << "Failed to open level file: " << filepath << std::endl;
@@ -28,7 +37,7 @@ bool Level::Load(const std::string& filepath, Game* game) {
         for (const auto& objJson : levelData["objects"]) {
             GameObject* go = CreateObjectFromJson(objJson);
             if (go) {
-                game->AddObject(go);
+                AddObject(go);
             }
         }
     }
@@ -60,13 +69,13 @@ bool Level::Save(const std::string& filepath, const std::vector<GameObject*>& ob
     return false;
 }
 
-void Level::Unload(Game* game) {
+void Level::Unload() {
     // 遍历场景对象，删除非持久化的对象
-    for (auto it = game->sceneObjects.begin(); it != game->sceneObjects.end(); ) {
+    for (auto it = _objects.begin(); it != _objects.end(); ) {
         GameObject* obj = *it;
         if (!obj->isPersistent) {
             delete obj; // 释放内存
-            it = game->sceneObjects.erase(it); // 从列表中移除
+            it = _objects.erase(it); // 从列表中移除
         } else {
             ++it; // 保留持久化对象
         }

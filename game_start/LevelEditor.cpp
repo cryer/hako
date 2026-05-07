@@ -9,7 +9,7 @@ void LevelEditor::RenderUI(Game* game) {
     ImGui::Begin("Level Editor (Map Maker)");
 
     if (ImGui::Button("Save Map to JSON")) {
-        currentLevel.Save("assets/levels/level_03.json", game->sceneObjects, game->camera.Position);
+        currentLevel.Save("assets/levels/level_03.json", currentLevel._objects, game->camera.Position);
     }
 
     ImGui::SameLine();
@@ -21,7 +21,7 @@ void LevelEditor::RenderUI(Game* game) {
         trigger->transform.position = game->camera.Position + game->camera.Front * 2.0f;
         trigger->localAABB.min = glm::vec3(-1.0f);
         trigger->localAABB.max = glm::vec3(1.0f);
-        game->AddObject(trigger);
+        currentLevel.AddObject(trigger);
     }
     
     ImGui::Separator();
@@ -29,8 +29,9 @@ void LevelEditor::RenderUI(Game* game) {
     ImGui::Text("Scene Objects:");
     // 左侧：场景对象列表
     ImGui::BeginChild("ObjectList", ImVec2(150, 0), true);
-    for (int i = 0; i < game->sceneObjects.size(); ++i) {
-        GameObject* obj = game->sceneObjects[i];
+
+    for (int i = 0; i < currentLevel._objects.size(); ++i) {     
+        GameObject* obj = currentLevel._objects[i];
         bool isSelected = (selectedObject == obj);
         
         // 当点击时将其设为选中目标
@@ -73,9 +74,9 @@ void LevelEditor::RenderUI(Game* game) {
 
         if (ImGui::Button("Delete Object")) {
             // 从场景列表中移除并清理内存
-            auto it = std::find(game->sceneObjects.begin(), game->sceneObjects.end(), selectedObject);
-            if (it != game->sceneObjects.end()) {
-                game->sceneObjects.erase(it);
+            auto it = std::find(currentLevel._objects.begin(), currentLevel._objects.end(), selectedObject);
+            if (it != currentLevel._objects.end()) {
+                currentLevel._objects.erase(it);
                 delete selectedObject;
                 selectedObject = nullptr;
             }

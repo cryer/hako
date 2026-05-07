@@ -3,6 +3,7 @@
 #include <vector>
 #include <glm/glm.hpp>
 #include <nlohmann/json.hpp>
+#include <memory>
 
 #include "GameObject.h"
 
@@ -25,14 +26,21 @@ class Level {
 public:
     std::string levelName;
     glm::vec3 playerSpawn = glm::vec3(0.0f, 0.0f, 0.0f);
+    // 使用unique_ptr会导致写法更繁琐一些，因为_objects需要在Game类循环中频繁使用，以及碰撞检测
+    // 四叉树等，就用原始指针提供直接访问接口更清晰
+    std::vector<GameObject*> _objects;
 
-    // 加载关卡文件，并将生成的对象注入到 game->sceneObjects 中
-    bool Load(const std::string& filepath, Game* game);
+    ~Level();
+
+    // 加载关卡文件，并将生成的对象注入到 _objects 中
+    bool Load(const std::string& filepath);
     
-    // 将当前的 sceneObjects 保存到关卡 JSON 文件中
+    // 将当前的 _objects 保存到关卡 JSON 文件中
     bool Save(const std::string& filepath, const std::vector<GameObject*>& objects, const glm::vec3& currentSpawn);
 
-    void Unload(Game* game);
+    void Unload();
+  
+    void AddObject(GameObject* obj) { _objects.push_back(obj); }
 
 private:
     GameObject* CreateObjectFromJson(const nlohmann::json& j);
