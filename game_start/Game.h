@@ -1,22 +1,18 @@
 #pragma once
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <vector>
 #include <functional>
 #include "camera.h"
 #include "Renderer.h"
 #include "GameObject.h"
-#include "PlayerWeapon.h"
 #include "DebugTerminal.h"
 #include "GazeMenu.h"
-#include "ResourceManager.h"
 #include "AABB.h"
 #include "Frustum.h"
-#include "Level.h"
 #include "LevelEditor.h"
 #include "QuadTree.h"
 
-#include "utils.h"
 
 
 class Game {
@@ -24,18 +20,20 @@ public:
     int width, height;
     GLFWwindow* window;
     
+    std::vector<GameObject*> sceneObjects;
+    // 组件声明
     Camera camera;
-    Renderer* renderer;
     DebugTerminal terminal;
     GazeMenu myMenu;
-    std::vector<GameObject*> sceneObjects;
-
     AABB playerBox;
     Frustum frustum;
-
+    QuadTree sceneTree;
     LevelEditor mapEditor;
 
-    QuadTree* sceneTree;
+    // Renderer类因为构造需要初始化VAO VBO 顶点属性，以及绑定设置纹理这些
+    // 因此需要创建了GLAW上下文之后才能使用，所以需要延迟构造，因此使用指针
+    // 因为生命周期和Game一致，且所有权是Game类管理，因此使用智能指针
+    std::unique_ptr<Renderer> renderer;
 
     
     // 游戏全局状态

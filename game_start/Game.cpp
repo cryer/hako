@@ -1,11 +1,13 @@
 #include <windows.h>
-#include "Game.h"
-#include "ResourceManager.h"
 #include <iostream>
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <algorithm>
+
+#include "Game.h"
+#include "ResourceManager.h"
+#include "PlayerWeapon.h"
 
 
 // 全局静态指针，用于回调函数访问
@@ -56,20 +58,21 @@ bool OpenChromeBrowser(const std::wstring& url) {
 }
 
 
-Game::Game(int w, int h) : width(w), height(h), camera(glm::vec3(0.0f, 3.0f, 3.0f)), myMenu(1.5f, -10.0f) {
+Game::Game(int w, int h) : width(w), height(h), 
+                           camera(glm::vec3(0.0f, 3.0f, 3.0f)), 
+                           myMenu(1.5f, -10.0f),
+                           sceneTree(0, {-1000.0f, -1000.0f, 1000.0f, 1000.0f}){
     g_Game = this;
     lastX = w / 2.0f;
     lastY = h / 2.0f;
 
     // 创建一个足够大的初始边界 (比如 -1000 到 1000 的地图)
-    sceneTree = new QuadTree(0, {-1000.0f, -1000.0f, 1000.0f, 1000.0f});
+    // sceneTree = new QuadTree(0, {-1000.0f, -1000.0f, 1000.0f, 1000.0f});
 }
 
 Game::~Game() {
     ResourceManager::Clear();
     for (auto obj : sceneObjects) delete obj;
-    delete renderer;
-    delete sceneTree;
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
@@ -197,7 +200,8 @@ bool Game::Init(const char* title) {
     terminal.AddLog("Developer Terminal Ready. Press '~' to toggle.");
 
     // 初始化渲染器
-    renderer = new Renderer();
+    // renderer = new Renderer();
+    renderer = std::make_unique<Renderer>();
     
     return true;
 }
@@ -297,9 +301,9 @@ void Game::Run() {
         // ==========================================
         // 每帧重建四叉树 (超级轻量，解决动态更新和编辑器拖动)
         // ==========================================
-        sceneTree->Clear();
+        sceneTree.Clear();
         for (GameObject* obj : sceneObjects) {
-            sceneTree->Insert(obj);
+            sceneTree.Insert(obj);
         }
 
 
@@ -314,7 +318,7 @@ void Game::Run() {
         // 将玩家包围盒转为 2D 矩形
         Rect2D playerRect = {playerBox.min.x, playerBox.min.z, playerBox.max.x, playerBox.max.z};
         std::vector<GameObject*> nearPlayerObjects;
-        sceneTree->Query(playerRect, nearPlayerObjects);
+        sceneTree.Query(playerRect, nearPlayerObjects);
 
         std::string levelToLoad = "";
         
@@ -352,7 +356,7 @@ void Game::Run() {
         }
 
 
-        // 执行关卡切换
+        // 执行关卡切换（这里四叉树应该重建一下）
         if (!levelToLoad.empty()) {
             std::cout << "Trigger activated! Loading next level: " << levelToLoad << std::endl;       
             // a. 卸载当前关卡 (清理内存)
@@ -362,6 +366,11 @@ void Game::Run() {
             // c. 传送玩家到新关卡的出生点
             camera.Position = mapEditor.currentLevel.playerSpawn;
             // 可选：你可以在这里加个渐黑屏幕或者提示音
+
+            sceneTree.Clear();
+            for (GameObject* obj : sceneObjects) {
+                sceneTree.Insert(obj);
+            }
         }
  
         // ==========================================
@@ -375,7 +384,7 @@ void Game::Run() {
         };
 
         std::vector<GameObject*> visibleObjects;
-        sceneTree->Query(cameraViewRect, visibleObjects);
+        sceneTree.Query(cameraViewRect, visibleObjects);
         // 然后下面所有的object渲染，都使用visibleObjects，而不是sceneObjects
 
         // ==========================================

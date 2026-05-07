@@ -1,8 +1,6 @@
 #pragma once
 #include <vector>
-#include <string>
 #include <glad/glad.h>
-#include <unordered_map>
 #include "camera.h"
 #include "GameObject.h"
 #include "AABB.h"

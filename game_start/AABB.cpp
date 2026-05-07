@@ -1,5 +1,4 @@
 #include "AABB.h"
-#include <iostream>
 
 AABB AABB::GetTransformed(const glm::mat4& transform) const {
     // 1. 获取本地AABB的8个角顶点

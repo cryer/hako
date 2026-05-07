@@ -1,7 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
 #include <limits>
-#include <vector>
 
 
 // 最简单的AABB碰撞检测
