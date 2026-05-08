@@ -75,11 +75,8 @@ int main() {
     */
     // ==========================================
     
-    // Level levelManager;
 
-    // bool hasMap = levelManager.Load("assets/levels/level_01.json", &game);
-
-    bool hasMap = game.mapEditor.currentLevel.Load("assets/levels/level_01.json");
+    bool hasMap = Level::Instance().Load("assets/levels/level_01.json");
 
     if (!hasMap) {
         std::cout << "No level file found, starting empty level..." << std::endl;
@@ -162,13 +159,13 @@ int main() {
     // go->transform.position = glm::vec3(0.2f, 2.0f, 1.0f);
     // // go->transform.rotation = glm::vec3(0.2f);
     // go->transform.scale = glm::vec3(2.0f);
-    // game.AddObject(go);
+    // Level::Instance().AddObject.AddObject(go);
 
     // 添加具有“特殊独立逻辑”的玩家武器
     WeaponConfig m416("M416", "m416", "standard",{0.5f, -2.0f, -1.5f},{-10.0f,190.0f,0.0f},{0.2f,0.2f,0.2f});
 
     PlayerWeapon* m4 = new PlayerWeapon(m416, &game.camera);
-    game.mapEditor.currentLevel.AddObject(m4);
+    Level::Instance().AddObject(m4);
  
     // 启动游戏主循环！
     game.Run();

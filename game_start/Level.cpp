@@ -1,10 +1,14 @@
 #include "Level.h"
-#include "Game.h" 
 #include "ResourceManager.h"
 #include <fstream>
 #include <iostream>
 
 using json = nlohmann::json;
+
+Level& Level::Instance() {
+    static Level instance;
+    return instance;
+}
 
 Level::~Level(){
     for (auto it = _objects.begin(); it != _objects.end(); ) {
@@ -46,15 +50,16 @@ bool Level::Load(const std::string& filepath) {
     return true;
 }
 
-bool Level::Save(const std::string& filepath, const std::vector<GameObject*>& objects, const glm::vec3& currentSpawn) {
+bool Level::Save(const std::string& filepath, const glm::vec3& currentSpawn) {
     json levelData;
     levelData["name"] = levelName.empty() ? "New Level" : levelName;
     levelData["player_spawn"] = currentSpawn;
 
     json objectsArray = json::array();
-    for (GameObject* obj : objects) {
+    for (GameObject* obj : _objects) {
         // 这里可以过滤掉不需要保存的物体，比如动态生成的子弹或者玩家自己的武器
-        if (obj->name == "M416" || obj->name == "Player") continue; 
+        // if (obj->name == "M416" || obj->name == "Player") continue; 
+        if (obj->isPersistent) continue;
         
         objectsArray.push_back(CreateJsonFromObject(obj));
     }

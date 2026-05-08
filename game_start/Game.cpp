@@ -18,7 +18,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 }
 
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
-    if (!g_Game || g_Game->terminal.GetVisible() || g_Game->mapEditor.isVisible) return;
+    if (!g_Game || g_Game->terminal.GetVisible() || LevelEditor::Instance().isVisible) return;
     float xpos = static_cast<float>(xposIn);
     float ypos = static_cast<float>(yposIn);
     if (g_Game->firstMouse) { g_Game->lastX = xpos; g_Game->lastY = ypos; g_Game->firstMouse = false; }
@@ -30,7 +30,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-    if (!g_Game || g_Game->terminal.GetVisible() || g_Game->mapEditor.isVisible) return;
+    if (!g_Game || g_Game->terminal.GetVisible() || LevelEditor::Instance().isVisible) return;
     g_Game->camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
 
@@ -213,7 +213,7 @@ void Game::ProcessInput() {
 
     // 触发武器开火
     if (showGun && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-        for (auto obj : mapEditor.currentLevel._objects) {
+        for (auto obj : Level::Instance()._objects) {
             PlayerWeapon* weapon = dynamic_cast<PlayerWeapon*>(obj);
             if (weapon) {
                 weapon->Fire(static_cast<float>(glfwGetTime()));
@@ -259,7 +259,7 @@ void Game::Run() {
         }
 
         // 处理地图编辑器造成的的鼠标状态变更
-        bool currentEditorVisible = mapEditor.isVisible;
+        bool currentEditorVisible = LevelEditor::Instance().isVisible;
         if (currentEditorVisible != lastEditorVisible) {
             if (currentEditorVisible) {
                 glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
@@ -273,7 +273,7 @@ void Game::Run() {
 
         // 切换地图编辑器状态(消抖)
         if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS) {
-            if (!mKeyPressed) { mapEditor.isVisible = !mapEditor.isVisible; mKeyPressed = true; }
+            if (!mKeyPressed) { LevelEditor::Instance().isVisible = !LevelEditor::Instance().isVisible; mKeyPressed = true; }
         } else mKeyPressed = false;
 
         // --- GazeMenu 输入与逻辑 ---
@@ -298,7 +298,7 @@ void Game::Run() {
         // 每帧重建四叉树 (超级轻量，解决动态更新和编辑器拖动)
         // ==========================================
         sceneTree.Clear();
-        for (auto obj : mapEditor.currentLevel._objects) {
+        for (auto obj : Level::Instance()._objects) {
             sceneTree.Insert(obj);
         }
 
@@ -317,7 +317,7 @@ void Game::Run() {
         std::string levelToLoad = "";
         
         // --- 游戏逻辑更新 (解耦重点：实体自己管自己的运算) ---
-        for (auto& obj : mapEditor.currentLevel._objects) {
+        for (auto& obj : Level::Instance()._objects) {
         
             // 同步全局 showGun 状态给具体武器
             if (obj->name == "M416") {
@@ -354,15 +354,15 @@ void Game::Run() {
         if (!levelToLoad.empty()) {
             std::cout << "Trigger activated! Loading next level: " << levelToLoad << std::endl;       
             // 卸载当前关卡 (清理内存)
-            mapEditor.currentLevel.Unload(); 
+            Level::Instance().Unload(); 
             // 加载新关卡
-            mapEditor.currentLevel.Load(levelToLoad);
+            Level::Instance().Load(levelToLoad);
             // 传送玩家到新关卡的出生点
-            camera.Position = mapEditor.currentLevel.playerSpawn;
+            camera.Position = Level::Instance().playerSpawn;
             // 你可以在这里加个渐黑屏幕或者提示音
 
             sceneTree.Clear();
-            for (GameObject* obj : mapEditor.currentLevel._objects) {
+            for (GameObject* obj : Level::Instance()._objects) {
             sceneTree.Insert(obj);
         }
         }
@@ -451,8 +451,8 @@ void Game::Run() {
         terminal.Draw();
 
         // 渲染地图编辑器
-        if (mapEditor.isVisible){
-            mapEditor.RenderUI(g_Game);
+        if (LevelEditor::Instance().isVisible){
+            LevelEditor::Instance().RenderUI(g_Game);
         }
       
         ImGui::Render();

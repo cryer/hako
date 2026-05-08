@@ -3,13 +3,18 @@
 #include <imgui.h>
 #include <algorithm>
 
+LevelEditor& LevelEditor::Instance() {
+    static LevelEditor instance;
+    return instance;
+}
+
 void LevelEditor::RenderUI(Game* game) {
     if (!isVisible) return;
 
     ImGui::Begin("Level Editor (Map Maker)");
 
     if (ImGui::Button("Save Map to JSON")) {
-        currentLevel.Save("assets/levels/level_03.json", currentLevel._objects, game->camera.Position);
+        Level::Instance().Save("assets/levels/level_03.json", game->camera.Position);
     }
 
     ImGui::SameLine();
@@ -21,7 +26,7 @@ void LevelEditor::RenderUI(Game* game) {
         trigger->transform.position = game->camera.Position + game->camera.Front * 2.0f;
         trigger->localAABB.min = glm::vec3(-1.0f);
         trigger->localAABB.max = glm::vec3(1.0f);
-        currentLevel.AddObject(trigger);
+        Level::Instance().AddObject(trigger);
     }
     
     ImGui::Separator();
@@ -30,8 +35,8 @@ void LevelEditor::RenderUI(Game* game) {
     // 左侧：场景对象列表
     ImGui::BeginChild("ObjectList", ImVec2(150, 0), true);
 
-    for (int i = 0; i < currentLevel._objects.size(); ++i) {     
-        GameObject* obj = currentLevel._objects[i];
+    for (int i = 0; i < Level::Instance()._objects.size(); ++i) {     
+        GameObject* obj = Level::Instance()._objects[i];
         bool isSelected = (selectedObject == obj);
         
         // 当点击时将其设为选中目标
@@ -69,14 +74,12 @@ void LevelEditor::RenderUI(Game* game) {
             ImGui::Checkbox("Has Collision", &selectedObject->hasCollision);
         }
         
-        // ImGui::Separator();
-        // ImGui::Checkbox("Has Collision", &selectedObject->hasCollision);
 
         if (ImGui::Button("Delete Object")) {
             // 从场景列表中移除并清理内存
-            auto it = std::find(currentLevel._objects.begin(), currentLevel._objects.end(), selectedObject);
-            if (it != currentLevel._objects.end()) {
-                currentLevel._objects.erase(it);
+            auto it = std::find(Level::Instance()._objects.begin(), Level::Instance()._objects.end(), selectedObject);
+            if (it != Level::Instance()._objects.end()) {
+                Level::Instance()._objects.erase(it);
                 delete selectedObject;
                 selectedObject = nullptr;
             }

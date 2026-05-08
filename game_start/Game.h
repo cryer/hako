@@ -18,8 +18,7 @@ class Game {
 public:
     int width, height;
     GLFWwindow* window;
-    // Level创建，但是Game析构释放，改成Level拥有sceneObjects所有权以及生命周期 
-    // std::vector<GameObject*> sceneObjects;
+
     // 组件声明
     Camera camera;
     DebugTerminal terminal;
@@ -27,12 +26,6 @@ public:
     AABB playerBox;
     Frustum frustum;
     QuadTree sceneTree;
-    // 整个游戏，LevelEditor和Level只会实例化一次，Level在mapEditor内部实例化
-    // 这样很多时候就不需要传入Game类指针了，比如Level和LevelEditor中可以直接更简单操作_objects
-    // 因此改成单例模式也可以
-    LevelEditor mapEditor;
-    // 借助mapEditor中的currentLevel成员变量，因此无需再在Game中声明Level实例，且如果实例了，反而和
-    // mapEditor中重复了，导致多个Level实例化（Level是全局关卡管理器，即使实例化有时候叫currentLevel）
 
     // Renderer类因为构造需要初始化VAO VBO 顶点属性，以及绑定设置纹理这些
     // 因此需要创建了GLAW上下文之后才能使用，所以需要延迟构造，因此使用指针
@@ -67,8 +60,7 @@ public:
 
     void ProcessInput();
     void SetupMenu();
-    // 同样会AddObject应该由Level管理
-    // void AddObject(GameObject* obj) { sceneObjects.push_back(obj); }
+
 private:
     // 辅助函数：创建并返回一个配置好的 MenuItem
     MenuItem CreateMenuItem(
