@@ -52,11 +52,11 @@ void PlayerWeapon::Update(float deltaTime) {
                      * glm::scale(glm::mat4(1.0f), config.scale);
 }
 
-void PlayerWeapon::Draw(Shader* overrideShader) {
+void PlayerWeapon::Draw(Shader* overrideShader, int lodLevel) {
     Shader* shader = overrideShader ? overrideShader : ResourceManager::GetShader(shaderName);
     Model* model = ResourceManager::GetModel(modelName);
     if (!shader || !model) return;
 
     shader->setMatrix4fv("model", finalModelMatrix);
-    model->Draw(*shader);
+    model->Draw(*shader, lodLevel);
 }

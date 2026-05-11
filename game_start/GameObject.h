@@ -44,6 +44,7 @@ public:
     bool isDynamic = false;
     bool hasCollision = false; // 默认不参与碰撞
 
+
     // === 生命周期与触发器属性 ===
     bool isPersistent = false; // 是否是持久对象（切关卡时不销毁，比如玩家武器）
     bool isTrigger = false;    // 是否是触发器区域（隐形，仅用于检测相交）
@@ -69,13 +70,13 @@ public:
 
     virtual void Update(float deltaTime) {} // 子类可重写逻辑
 
-    virtual void Draw(Shader* overrideShader = nullptr) {
+    virtual void Draw(Shader* overrideShader = nullptr, int lodLevel = 0) {
         Shader* shader = overrideShader ? overrideShader : ResourceManager::GetShader(shaderName);
         if (!shader) return;
         Model* model = ResourceManager::GetModel(modelName);
         if (!model) return;
         shader->setMatrix4fv("model", transform.GetMatrix());
-        model->Draw(*shader);
+        model->Draw(*shader, lodLevel);
     }
 };
 

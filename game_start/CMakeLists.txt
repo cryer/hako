@@ -13,6 +13,7 @@ find_package(glfw3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(ASSIMP REQUIRED)
 find_package(imgui CONFIG REQUIRED)
+find_package(meshoptimizer CONFIG REQUIRED)
 
 find_path(STB_INCLUDE_DIRS "stb_image.h") 
 include_directories(${STB_INCLUDE_DIRS})
@@ -34,7 +35,7 @@ add_executable(game
 	LevelEditor.cpp
 	QuadTree.cpp)
 
-target_link_libraries(game PRIVATE glad::glad glfw glm::glm assimp::assimp imgui::imgui)
+target_link_libraries(game PRIVATE glad::glad glfw glm::glm assimp::assimp imgui::imgui meshoptimizer::meshoptimizer)
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/assets DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

@@ -88,7 +88,7 @@ void Renderer::RenderMainPass(
         bool shadowOn, 
         float screenWidth, 
         float screenHeight,
-        Frustum frustum) {
+        Frustum& frustum) {
     glViewport(0, 0, screenWidth, screenHeight);
     glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -129,8 +129,25 @@ void Renderer::RenderMainPass(
         // 视锥体剔除(只剔除渲染部分，update和碰撞检测保持计算
         // 否则不在视野中的实体就不更新逻辑了以及倒着走
         // 就能无视碰撞。主要节省大量的drawcall)
-        if (!frustum.isBoxVisible(obj->GetWorldAABB())) continue;
-        obj->Draw(shader);
+        AABB worldAABB = obj->GetWorldAABB();
+        if (!frustum.isBoxVisible(worldAABB)) continue;
+
+        // 【新增】计算模型中心到相机的距离，以此划分 LOD 级别
+        glm::vec3 center = (worldAABB.min + worldAABB.max) * 0.5f;
+        float distance = glm::distance(camera.Position, center);
+
+        int lodLevel = 0; // 默认 LOD0
+        if (distance > 20.0f) {
+            lodLevel = 2; // 距离大于 35，切为 25% (LOD2)
+        } else if (distance > 10.0f) {
+            lodLevel = 1; // 距离在 15-35 之间，切为 50% (LOD1)
+        }
+
+        // obj->Draw(shader);
+        // 【修改】传入 lodLevel。
+        // ※ 前提说明：需要在你的 GameObject::Draw 方法中加上 int lodLevel = 0 参数，
+        // 并在 GameObject 内部转调 Model->Draw(shader, lodLevel);
+        obj->Draw(shader, lodLevel); 
     }
 }
 

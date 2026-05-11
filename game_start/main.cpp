@@ -1,3 +1,12 @@
+// ========== 强制使用高性能显卡 ==========
+extern "C" {
+    // NVIDIA Optimus
+    __declspec(dllexport) unsigned long NvOptimusEnablement = 0x00000001;
+    // AMD Switchable Graphics
+    __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+}
+// =======================================
+
 #include "Game.h"
 #include "GameObject.h"
 #include "ResourceManager.h"
@@ -88,7 +97,6 @@ int main() {
 
     // 5. 初始化交互式 UI 菜单
     game.SetupMenu();
-
 
     // ==========================================
     // 6. 场景装配

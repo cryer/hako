@@ -31,7 +31,7 @@ public:
                         bool shadowOn, 
                         float screenWidth, 
                         float screenHeight,
-                        Frustum frustum);
+                        Frustum& frustum);
 
 
     void RenderFloor(Camera& camera, 

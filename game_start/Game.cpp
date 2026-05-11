@@ -163,6 +163,9 @@ bool Game::Init(const char* title) {
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
+    // 禁用垂直同步
+    glfwSwapInterval(0);  // 0=禁用VSync, 1=启用
+
     // 2. 初始化 GLAD
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cout << "Failed to initialize GLAD" << std::endl;
@@ -322,8 +325,8 @@ void Game::Run() {
             // 同步全局 showGun 状态给具体武器
             if (obj->name == "M416") {
                 obj->isVisible = showGun;
-            }      
-            
+            }
+          
             // 只有当物体激活/可见时，才执行它的逻辑更新
             if (obj->isVisible) {
                 obj->Update(deltaTime);
@@ -371,7 +374,7 @@ void Game::Run() {
         // 渲染剔除优化
         // ==========================================
         // 给摄像机定一个可见范围（比如周围 20 米的矩形框）
-        float viewDist = 20.0f; 
+        float viewDist = 25.0f; 
         Rect2D cameraViewRect = {
             camera.Position.x - viewDist, camera.Position.z - viewDist,
             camera.Position.x + viewDist, camera.Position.z + viewDist
@@ -454,6 +457,26 @@ void Game::Run() {
         if (LevelEditor::Instance().isVisible){
             LevelEditor::Instance().RenderUI(g_Game);
         }
+
+        if (ImGui::Begin("TEST")) {
+            // ImGui::Text("Frame: %d", frame); // 需在 Game.h 加 int frame = 0; 并每帧++
+            ImGui::Separator();
+            for (auto* obj : visibleObjects) {
+                if (obj->name == "Sk2") {
+                    bool inFrustum = frustum.isBoxVisible(obj->GetWorldAABB());
+                    ImGui::Text("%s", obj->name.c_str());
+                    ImGui::SameLine(); ImGui::TextColored(
+                        ImVec4(inFrustum ? 0.0f : 1.0f, 
+                               inFrustum ? 1.0f : 0.0f, 0.0f, 1.0f),
+                        "GPU: %s", inFrustum ? "ON" : "OFF"
+                    );
+                    ImGui::Separator();
+                    Model* model = ResourceManager::GetModel(obj->modelName);
+                    ImGui::Text("LOD: %d", model->currentLOD);
+                }
+            }
+        }
+        ImGui::End();
       
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

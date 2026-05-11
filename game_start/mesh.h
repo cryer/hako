@@ -46,30 +46,39 @@ class Mesh {
 public:
     // mesh Data
     vector<Vertex>       vertices;
-    vector<unsigned int> indices;
+    // 将索引数组扩充为 3 个（对应 LOD0, LOD1, LOD2）
+    vector<unsigned int> indices[3];
     vector<Texture>      textures;
     unsigned int VAO;
 
-    // 【新增】网格局部AABB
+    // 网格局部AABB
     AABB localAABB;
 
-    // 【修改】构造函数，增加 AABB 参数
+    // 构造函数，增加 AABB 参数
     Mesh(vector<Vertex> vertices, 
-        vector<unsigned int> indices, 
+        vector<unsigned int> indicesLOD0, 
+        vector<unsigned int> indicesLOD1, 
+        vector<unsigned int> indicesLOD2,
         vector<Texture> textures,
         AABB aabb)
     {
         this->vertices = vertices;
-        this->indices = indices;
+        this->indices[0] = indicesLOD0;
+        this->indices[1] = indicesLOD1;
+        this->indices[2] = indicesLOD2;
+
         this->textures = textures;
 
         this->localAABB = aabb; // 赋值AABB
 
         setupMesh();
     }
-
-    void Draw(Shader &shader) 
+    // Draw 函数接收 lodLevel，默认为 0
+    void Draw(Shader &shader, int lodLevel = 0)
     {
+        // 确保 lodLevel 不越界
+        lodLevel = std::max(0, std::min(lodLevel, 2));
+
         unsigned int diffuseNr  = 1;
         unsigned int specularNr = 1;
         unsigned int normalNr   = 1;
@@ -95,41 +104,44 @@ public:
         
         // draw mesh
         glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(indices.size()), GL_UNSIGNED_INT, 0);
+        // 由于所有 LOD 共享顶点 VBO，只需要切换 EBO 即可无缝切换 LOD
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[lodLevel]);
+        glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(indices[lodLevel].size()), GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
+
 
         // ===== 添加解绑操作，防止纹理污染 =====
         for(unsigned int i = 0; i < textures.size(); i++) {
             glActiveTexture(GL_TEXTURE0 + i);
             glBindTexture(GL_TEXTURE_2D, 0); 
         }
-
-        // always good practice to set everything back to defaults once configured.
         glActiveTexture(GL_TEXTURE0);
     }
 
 private:
-    // render data 
-    unsigned int VBO, EBO;
+    // 我们需要 3 个 EBO
+    unsigned int VBO, EBO[3];
 
-    // initializes all the buffer objects/arrays
     void setupMesh()
     {
-        // create buffers/arrays
         glGenVertexArrays(1, &VAO);
         glGenBuffers(1, &VBO);
-        glGenBuffers(1, &EBO);
+        glGenBuffers(3, EBO); // 生成 3 个 EBO
 
         glBindVertexArray(VAO);
-        // load data into vertex buffers
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
 
-        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);  
+        // 初始化时将 LOD 的 indices 存入各自的 EBO 中
+        for(int i = 0; i < 3; i++) {
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[i]);
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices[i].size() * sizeof(unsigned int), &indices[i][0], GL_STATIC_DRAW);
+        }
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
+        // （强制绑定回 EBO[0] 保证 VAO 默认记录 LOD0，虽然 Draw 会动态切换，这是好习惯）
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[0]);
 
-        // set the vertex attribute pointers
+
         // vertex Positions
         glEnableVertexAttribArray(0);   
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);

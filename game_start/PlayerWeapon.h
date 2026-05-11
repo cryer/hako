@@ -18,5 +18,5 @@ public:
 
     void Fire(float currentTime);
     void Update(float deltaTime) override;
-    void Draw(Shader* overrideShader = nullptr) override;
+    void Draw(Shader* overrideShader = nullptr, int lodLevel = 0) override;
 };

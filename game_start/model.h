@@ -20,6 +20,7 @@
 #include <iostream>
 #include <map>
 #include <vector>
+#include <meshoptimizer.h>
 
 using namespace std;
 
@@ -29,6 +30,12 @@ unsigned int TextureFromFile(const char *path, const string &directory, bool gam
 class Model 
 {
 public:
+    // LOD 及统计数据
+    string modelName;
+    int currentLOD = -1; // 记录当前 LOD 以便比对
+    unsigned int lodVertexCount[3] = {0, 0, 0};
+    unsigned int lodFaceCount[3]   = {0, 0, 0};
+
     // model data 
     vector<Texture> textures_loaded;
     vector<Mesh>    meshes;
@@ -46,11 +53,17 @@ public:
         calculateAABB(calcAABB){
         loadModel(path);
     }
-
-    void Draw(Shader &shader)
+    // Draw 函数接收并向下传递 lodLevel
+    void Draw(Shader &shader, int lodLevel = 0)
     {
+        lodLevel = std::max(0, std::min(lodLevel, 2));
+
+        if (lodLevel != currentLOD) {
+            currentLOD = lodLevel;
+        }
+
         for(unsigned int i = 0; i < meshes.size(); i++)
-            meshes[i].Draw(shader);
+            meshes[i].Draw(shader, currentLOD);
     }
 
     // 强制给模型的所有 Mesh 设置一张漫反射贴图（无视原有的 mtl 设置）
@@ -87,37 +100,62 @@ private:
     void loadModel(string const &path)
     {
         Assimp::Importer importer;
-        const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+        // 这里必须加上 aiProcess_JoinIdenticalVertices ！！！
+        // 否则所有的面都是断开的，不仅无法生成 LOD，还会导致极高的内存占用和极差的渲染性能。
+        const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace | aiProcess_JoinIdenticalVertices);
 
         if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) 
         {
             cout << "ERROR::ASSIMP:: " << importer.GetErrorString() << endl;
             return;
         }
+
+        // 提取模型名
+        size_t lastSlash = path.find_last_of('/');
+        modelName = (lastSlash == string::npos) ? path : path.substr(lastSlash + 1);
    
         directory = path.substr(0, path.find_last_of('/'));
         processNode(scene->mRootNode, scene);
 
 
-        // ========== 统计并打印顶点数量 ==========
-        unsigned int totalVertices = 0;
-        unsigned int totalIndices = 0;
-        for(unsigned int i = 0; i < meshes.size(); i++)
-        {
-            totalVertices += meshes[i].vertices.size();
-            totalIndices += meshes[i].indices.size();
+        // 精确统计每个 LOD 级别中，实际使用的“唯一顶点数”和“面数”
+        for (int lod = 0; lod < 3; lod++) {
+            lodFaceCount[lod] = 0;
+            lodVertexCount[lod] = 0;
+            for (auto& mesh : meshes) {
+                lodFaceCount[lod] += mesh.indices[lod].size() / 3;
+                
+                // 计算该 LOD 降级后，实际真正还在被引用的顶点数量
+                vector<bool> used(mesh.vertices.size(), false);
+                unsigned int uniqueVerts = 0;
+                for (unsigned int idx : mesh.indices[lod]) {
+                    if (!used[idx]) { used[idx] = true; uniqueVerts++; }
+                }
+                lodVertexCount[lod] += uniqueVerts;
+            }
         }
-        cout << "Model loaded: " << path << endl;
-        cout << "Total Meshes: " << meshes.size() << endl;
-        cout << "Total Vertices: " << totalVertices << endl;
-        cout << "Total Indices: " << totalIndices << endl;
 
-        // 如果开启了计算AABB，可以在这里打印一下包围盒大小做验证
-        // if (calculateAABB) {
-        //     cout << "Model AABB Min: (" << localAABB.min.x << ", " << localAABB.min.y << ", " << localAABB.min.z << ")" << endl;
-        //     cout << "Model AABB Max: (" << localAABB.max.x << ", " << localAABB.max.y << ", " << localAABB.max.z << ")" << endl;
-        // }
+        // 打印模型加载完毕的全局信息
+        cout << "Model loaded: " << modelName << endl;
+        cout << "actual rendering statistic :" << endl;
+        for (int i = 0; i < 3; i++) {
+            cout << "  - LOD" << i << " | faces: " << lodFaceCount[i] << ", vertex: " << lodVertexCount[i] << endl;
+        }
         cout << "========================================" << endl;
+
+        // ========== 统计并打印顶点数量 ==========
+        // unsigned int totalVertices = 0;
+        // unsigned int totalIndices = 0;
+        // for(unsigned int i = 0; i < meshes.size(); i++)
+        // {
+        //     totalVertices += meshes[i].vertices.size();
+        //     totalIndices += meshes[i].indices.size();
+        // }
+        // cout << "Model loaded: " << path << endl;
+        // cout << "Total Meshes: " << meshes.size() << endl;
+        // cout << "Total Vertices: " << totalVertices << endl;
+        // cout << "Total Indices: " << totalIndices << endl;
+        // cout << "========================================" << endl;
     }
 
     void processNode(aiNode *node, const aiScene *scene)
@@ -236,13 +274,75 @@ private:
             textures.push_back(tex);
         }
 
+        // ================= MeshOptimizer 核心优化逻辑 =================
+        // 1. 【GPU顶点缓存优化】重排 LOD0 索引，提升 Vertex Shader 执行效率
+        meshopt_optimizeVertexCache(indices.data(), indices.data(), indices.size(), vertices.size());
+
+        // 2. 【显存带宽读取优化】重排 LOD0 的顶点物理存储顺序，大幅提升内存局部性
+        // 此函数会同时修改 vertices 和 indices 数组。
+        meshopt_optimizeVertexFetch(vertices.data(), indices.data(), indices.size(), 
+                                    vertices.data(), vertices.size(), sizeof(Vertex));
+
+        // 3. 【生成 LOD1 - 50%面数】
+        size_t target_indices_lod1 = size_t(indices.size() * 0.5f);
+        vector<unsigned int> indicesLOD1(indices.size());
+        size_t lod1_size = meshopt_simplify(
+            indicesLOD1.data(), 
+            indices.data(), indices.size(), // 以 LOD0 为基础简化
+            &vertices[0].Position.x, vertices.size(), sizeof(Vertex),
+            target_indices_lod1, 0.10f // 误差可调节
+        );
+
+        // 【保底】：如果因为 UV 缝隙等硬边界导致无法精简到目标面数
+        // 则改用 Sloppy 算法强制无视拓扑缝隙精简到 50%
+        // 【仅作保留】 如果强制使用，会导致很多模型，尤其是顶点少的模型失去基本外形
+        // if (lod1_size > target_indices_lod1 * 1.1f) { 
+        //     lod1_size = meshopt_simplifySloppy(
+        //         indicesLOD1.data(), 
+        //         indices.data(), indices.size(),
+        //         &vertices[0].Position.x, vertices.size(), sizeof(Vertex),
+        //         target_indices_lod1, 0.5f, nullptr
+        //     );
+        // }
+
+        indicesLOD1.resize(lod1_size);
+        // 对生成的 LOD1 也做一次顶点缓存优化
+        meshopt_optimizeVertexCache(indicesLOD1.data(), indicesLOD1.data(), indicesLOD1.size(), vertices.size());
+
+        // 4. 【生成 LOD2 - 25%面数】
+        size_t target_indices_lod2 = size_t(indices.size() * 0.25f);
+        vector<unsigned int> indicesLOD2(indices.size());
+        size_t lod2_size = meshopt_simplify(
+            indicesLOD2.data(), 
+            indicesLOD1.data(), indicesLOD1.size(), // 阶梯式：以 LOD1 为基础简化，更快
+            &vertices[0].Position.x, vertices.size(), sizeof(Vertex),
+            target_indices_lod2, 0.20f  // 误差
+        );
+
+        // 【保底】
+        // 【仅作保留】 如果强制使用，会导致很多模型，尤其是顶点少的模型失去基本外形
+        // if (lod2_size > target_indices_lod2 * 1.1f) {
+        //     lod2_size = meshopt_simplifySloppy(
+        //         indicesLOD2.data(), 
+        //         indicesLOD1.data(), indicesLOD1.size(),
+        //         &vertices[0].Position.x, vertices.size(), sizeof(Vertex),
+        //         target_indices_lod2, 0.5f, nullptr
+        //     );
+        // }
+
+        indicesLOD2.resize(lod2_size);
+        // 对生成的 LOD2 做一次顶点缓存优化
+        meshopt_optimizeVertexCache(indicesLOD2.data(), indicesLOD2.data(), indicesLOD2.size(), vertices.size());
+
+        // =======================================================================
+
         // 计算完成后，将当前网格的AABB合并进大模型总体的AABB中
         if (calculateAABB) {
             this->localAABB.Merge(meshAABB);
         }
         
-        // 返回Mesh时带上 meshAABB
-        return Mesh(vertices, indices, textures, meshAABB);
+        // 返回Mesh时带上 meshAABB ,传入三个级别的索引
+        return Mesh(vertices, indices, indicesLOD1, indicesLOD2, textures, meshAABB);
     }
 
     
