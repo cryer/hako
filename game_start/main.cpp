@@ -18,10 +18,11 @@ extern "C" {
 
 int main() {
     // 1. 创建游戏实例
-    Game game(800, 600);
+    // Game game(800, 600);
+    Game game(1300, 900);
     if (!game.Init("OpenGL Game")) return -1;
 
-    // 2. 加载着色器资源 (起好名字，全局随时调取)
+    // 2. 加载着色器资源
     ResourceManager::LoadShader("standard", "shaders/model_load.vs", "shaders/model_load.fs");
     ResourceManager::LoadShader("depth", "shaders/depth_shader.vs", "shaders/depth_shader.fs");
     ResourceManager::LoadShader("skybox", "shaders/skybox.vs", "shaders/skybox.fs");

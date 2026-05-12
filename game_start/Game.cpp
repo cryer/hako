@@ -10,6 +10,7 @@
 #include "PlayerWeapon.h"
 
 
+
 // 全局静态指针，用于回调函数访问
 static Game* g_Game = nullptr; 
 
@@ -61,7 +62,8 @@ bool OpenChromeBrowser(const std::wstring& url) {
 Game::Game(int w, int h) : width(w), height(h), 
                            camera(glm::vec3(0.0f, 3.0f, 3.0f)), 
                            myMenu(1.5f, -10.0f),
-                           sceneTree(0, {-1000.0f, -1000.0f, 1000.0f, 1000.0f}){
+                           sceneTree(0, {-1000.0f, -1000.0f, 1000.0f, 1000.0f}),
+                           limiter(144){
     g_Game = this;
     lastX = w / 2.0f;
     lastY = h / 2.0f;
@@ -146,6 +148,7 @@ void Game::SetupMenu() {
 bool Game::Init(const char* title) {
     // 1. 初始化 GLFW
     glfwInit();
+
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -199,7 +202,6 @@ bool Game::Init(const char* title) {
     terminal.AddLog("Developer Terminal Ready. Press '~' to toggle.");
 
     // 初始化渲染器
-    // renderer = new Renderer();
     renderer = std::make_unique<Renderer>();
     
     return true;
@@ -235,6 +237,9 @@ void Game::Run() {
 
 
     while (!glfwWindowShouldClose(window)) {
+        // 帧率限制器
+        limiter.wait();
+
         float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
@@ -247,6 +252,7 @@ void Game::Run() {
             frameCount = 0;
             fpsLastTime = currentFrame;
         }
+
 
         // 处理终端导致的鼠标状态变更
         bool currentTerminalVisible = terminal.GetVisible();
@@ -483,5 +489,6 @@ void Game::Run() {
 
         glfwSwapBuffers(window);
         glfwPollEvents();
+
     }
 }

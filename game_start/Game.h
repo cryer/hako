@@ -1,4 +1,5 @@
 #pragma once
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <vector>
@@ -12,7 +13,7 @@
 #include "Frustum.h"
 #include "LevelEditor.h"
 #include "QuadTree.h"
-
+#include "FpsLimiter.h"
 
 class Game {
 public:
@@ -39,7 +40,10 @@ public:
     // 旋转光源使用
     bool lightRotate = false;
     const float lightRadius = 2.5f;  // 公转半径
-    const float lightHeight = 3.0f;  // Y轴高度（可选）
+    const float lightHeight = 3.0f;  // Y轴高度
+
+    FrameLimiter limiter;
+
 
     bool showGun = false;
     bool shadowOn = false;

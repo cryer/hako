@@ -1,8 +1,8 @@
 #include "model.h"
 
-unsigned int TextureFromFile(const char *path, const string &directory, bool gamma)
+unsigned int TextureFromFile(const char *path, const std::string &directory, bool gamma)
 {
-    string filename = string(path);
+    std::string filename = std::string(path);
 
     filename = directory + '/' + filename;
 

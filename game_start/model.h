@@ -22,31 +22,29 @@
 #include <vector>
 #include <meshoptimizer.h>
 
-using namespace std;
-
-unsigned int TextureFromFile(const char *path, const string &directory, bool gamma = false);
+unsigned int TextureFromFile(const char *path, const std::string &directory, bool gamma = false);
 
 
 class Model 
 {
 public:
     // LOD 及统计数据
-    string modelName;
+    std::string modelName;
     int currentLOD = -1; // 记录当前 LOD 以便比对
     unsigned int lodVertexCount[3] = {0, 0, 0};
     unsigned int lodFaceCount[3]   = {0, 0, 0};
 
     // model data 
-    vector<Texture> textures_loaded;
-    vector<Mesh>    meshes;
-    string directory;
+    std::vector<Texture> textures_loaded;
+    std::vector<Mesh>    meshes;
+    std::string directory;
     bool gammaCorrection;
 
     AABB localAABB;
     bool calculateAABB;
 
 
-    Model(string const &path,
+    Model(std::string const &path,
         bool calcAABB = true,
         bool gamma = false) : 
         gammaCorrection(gamma),
@@ -67,7 +65,7 @@ public:
     }
 
     // 强制给模型的所有 Mesh 设置一张漫反射贴图（无视原有的 mtl 设置）
-    void SetDiffuseTexture(const string& textureFilename)
+    void SetDiffuseTexture(const std::string& textureFilename)
     {
         // 1. 加载这张图片作为纹理
         Texture tex;
@@ -79,7 +77,7 @@ public:
         for(unsigned int i = 0; i < meshes.size(); i++)
         {
             // 清理掉可能存在的旧的 diffuse 贴图，保留 normal 或 specular 等其他贴图
-            vector<Texture> newTextures;
+            std::vector<Texture> newTextures;
             for(unsigned int j = 0; j < meshes[i].textures.size(); j++)
             {
                 if(meshes[i].textures[j].type != "texture_diffuse")
@@ -93,11 +91,11 @@ public:
             meshes[i].textures = newTextures;
         }
         
-        cout << "Forced texture " << textureFilename << " applied to model." << endl;
+        std::cout << "Forced texture " << textureFilename << " applied to model." << std::endl;
     }
     
 private:
-    void loadModel(string const &path)
+    void loadModel(std::string const &path)
     {
         Assimp::Importer importer;
         // 这里必须加上 aiProcess_JoinIdenticalVertices ！！！
@@ -106,13 +104,13 @@ private:
 
         if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) 
         {
-            cout << "ERROR::ASSIMP:: " << importer.GetErrorString() << endl;
+            std::cout << "ERROR::ASSIMP:: " << importer.GetErrorString() << std::endl;
             return;
         }
 
         // 提取模型名
         size_t lastSlash = path.find_last_of('/');
-        modelName = (lastSlash == string::npos) ? path : path.substr(lastSlash + 1);
+        modelName = (lastSlash == std::string::npos) ? path : path.substr(lastSlash + 1);
    
         directory = path.substr(0, path.find_last_of('/'));
         processNode(scene->mRootNode, scene);
@@ -126,7 +124,7 @@ private:
                 lodFaceCount[lod] += mesh.indices[lod].size() / 3;
                 
                 // 计算该 LOD 降级后，实际真正还在被引用的顶点数量
-                vector<bool> used(mesh.vertices.size(), false);
+                std::vector<bool> used(mesh.vertices.size(), false);
                 unsigned int uniqueVerts = 0;
                 for (unsigned int idx : mesh.indices[lod]) {
                     if (!used[idx]) { used[idx] = true; uniqueVerts++; }
@@ -136,12 +134,12 @@ private:
         }
 
         // 打印模型加载完毕的全局信息
-        cout << "Model loaded: " << modelName << endl;
-        cout << "actual rendering statistic :" << endl;
+        std::cout << "Model loaded: " << modelName << std::endl;
+        std::cout << "actual rendering statistic :" << std::endl;
         for (int i = 0; i < 3; i++) {
-            cout << "  - LOD" << i << " | faces: " << lodFaceCount[i] << ", vertex: " << lodVertexCount[i] << endl;
+            std::cout << "  - LOD" << i << " | faces: " << lodFaceCount[i] << ", vertex: " << lodVertexCount[i] << std::endl;
         }
-        cout << "========================================" << endl;
+        std::cout << "========================================" << std::endl;
 
         // ========== 统计并打印顶点数量 ==========
         // unsigned int totalVertices = 0;
@@ -174,9 +172,9 @@ private:
 
     Mesh processMesh(aiMesh *mesh, const aiScene *scene)
     {
-        vector<Vertex> vertices;
-        vector<unsigned int> indices;
-        vector<Texture> textures;
+        std::vector<Vertex> vertices;
+        std::vector<unsigned int> indices;
+        std::vector<Texture> textures;
 
         // 当前Mesh的局部AABB
         AABB meshAABB;
@@ -243,10 +241,10 @@ private:
         // normal: texture_normalN
 
         // 1. diffuse maps
-        vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
+        std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
         textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
         // 2. specular maps
-        vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
+        std::vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
         textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
         // 3. normal maps
         std::vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal");
@@ -285,7 +283,7 @@ private:
 
         // 3. 【生成 LOD1 - 50%面数】
         size_t target_indices_lod1 = size_t(indices.size() * 0.5f);
-        vector<unsigned int> indicesLOD1(indices.size());
+        std::vector<unsigned int> indicesLOD1(indices.size());
         size_t lod1_size = meshopt_simplify(
             indicesLOD1.data(), 
             indices.data(), indices.size(), // 以 LOD0 为基础简化
@@ -311,7 +309,7 @@ private:
 
         // 4. 【生成 LOD2 - 25%面数】
         size_t target_indices_lod2 = size_t(indices.size() * 0.25f);
-        vector<unsigned int> indicesLOD2(indices.size());
+        std::vector<unsigned int> indicesLOD2(indices.size());
         size_t lod2_size = meshopt_simplify(
             indicesLOD2.data(), 
             indicesLOD1.data(), indicesLOD1.size(), // 阶梯式：以 LOD1 为基础简化，更快
@@ -346,9 +344,9 @@ private:
     }
 
     
-    vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, string typeName)
+    std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName)
     {
-        vector<Texture> textures;
+        std::vector<Texture> textures;
         for(unsigned int i = 0; i < mat->GetTextureCount(type); i++)
         {
             aiString str;

@@ -1,5 +1,4 @@
-#ifndef MESH_H
-#define MESH_H
+#pragma once
 
 #include <glad/glad.h> 
 
@@ -7,7 +6,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "shader.h"
-
 #include "AABB.h"
 
 #include <string>
@@ -15,7 +13,6 @@
 #include <sstream>
 #include <iostream>
 #include <vector>
-using namespace std;
 
 #define MAX_BONE_INFLUENCE 4
 
@@ -38,28 +35,28 @@ struct Vertex {
 
 struct Texture {
     unsigned int id;
-    string type;
-    string path;
+    std::string type;
+    std::string path;
 };
 
 class Mesh {
 public:
     // mesh Data
-    vector<Vertex>       vertices;
+    std::vector<Vertex>       vertices;
     // 将索引数组扩充为 3 个（对应 LOD0, LOD1, LOD2）
-    vector<unsigned int> indices[3];
-    vector<Texture>      textures;
+    std::vector<unsigned int> indices[3];
+    std::vector<Texture>      textures;
     unsigned int VAO;
 
     // 网格局部AABB
     AABB localAABB;
 
     // 构造函数，增加 AABB 参数
-    Mesh(vector<Vertex> vertices, 
-        vector<unsigned int> indicesLOD0, 
-        vector<unsigned int> indicesLOD1, 
-        vector<unsigned int> indicesLOD2,
-        vector<Texture> textures,
+    Mesh(std::vector<Vertex> vertices, 
+        std::vector<unsigned int> indicesLOD0, 
+        std::vector<unsigned int> indicesLOD1, 
+        std::vector<unsigned int> indicesLOD2,
+        std::vector<Texture> textures,
         AABB aabb)
     {
         this->vertices = vertices;
@@ -86,8 +83,8 @@ public:
         for(unsigned int i = 0; i < textures.size(); i++)
         {
             glActiveTexture(GL_TEXTURE0 + i);
-            string number;
-            string name = textures[i].type;
+            std::string number;
+            std::string name = textures[i].type;
             if(name == "texture_diffuse")
                 number = std::to_string(diffuseNr++);
             else if(name == "texture_specular")
@@ -167,4 +164,3 @@ private:
         glBindVertexArray(0);
     }
 };
-#endif
