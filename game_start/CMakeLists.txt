@@ -18,6 +18,9 @@ find_package(meshoptimizer CONFIG REQUIRED)
 find_path(STB_INCLUDE_DIRS "stb_image.h") 
 include_directories(${STB_INCLUDE_DIRS})
 
+find_path(MINIAUDIO_INCLUDE_DIRS "miniaudio.h")
+include_directories(${MINIAUDIO_INCLUDE_DIRS})
+
 
 add_executable(game 
 	main.cpp
@@ -33,7 +36,8 @@ add_executable(game
 	Frustum.cpp
 	Level.cpp
 	LevelEditor.cpp
-	QuadTree.cpp)
+	QuadTree.cpp
+	AudioManager.cpp)
 
 target_link_libraries(game PRIVATE glad::glad glfw glm::glm assimp::assimp imgui::imgui meshoptimizer::meshoptimizer winmm)
 

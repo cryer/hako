@@ -14,6 +14,7 @@
 #include "LevelEditor.h"
 #include "QuadTree.h"
 #include "FpsLimiter.h"
+#include "AudioManager.h"
 
 class Game {
 public:
@@ -27,6 +28,10 @@ public:
     AABB playerBox;
     Frustum frustum;
     QuadTree sceneTree;
+
+    FrameLimiter limiter;
+    AudioManager audio;
+
 
     // Renderer类因为构造需要初始化VAO VBO 顶点属性，以及绑定设置纹理这些
     // 因此需要创建了GLAW上下文之后才能使用，所以需要延迟构造，因此使用指针
@@ -42,8 +47,6 @@ public:
     const float lightRadius = 2.5f;  // 公转半径
     const float lightHeight = 3.0f;  // Y轴高度
 
-    FrameLimiter limiter;
-
 
     bool showGun = false;
     bool shadowOn = false;
@@ -55,6 +58,7 @@ public:
     bool firstMouse = true;
     bool lastTerminalVisible = false;
     bool lastEditorVisible = false;
+    bool isBgmPause = false;
 
     Game(int w, int h);
     ~Game();

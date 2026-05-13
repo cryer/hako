@@ -67,10 +67,13 @@ Game::Game(int w, int h) : width(w), height(h),
     g_Game = this;
     lastX = w / 2.0f;
     lastY = h / 2.0f;
+
 }
 
 Game::~Game() {
     ResourceManager::Clear();
+
+    audio.shutdown();
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
@@ -203,6 +206,17 @@ bool Game::Init(const char* title) {
 
     // 初始化渲染器
     renderer = std::make_unique<Renderer>();
+
+    // if (!audio.init()) {
+    //     std::cerr << "Running without audio.\n";
+    // }
+
+    if (!audio.init()) {
+        std::cerr << "Running without audio.\n";
+    } else {
+        // 在资源加载阶段预加载 BGM（避免首次播放卡顿）
+        audio.play_bgm("assets/sound/am.mp3", 0.1f);
+    }
     
     return true;
 }
@@ -230,10 +244,11 @@ void Game::ProcessInput() {
 void Game::Run() {
     double fpsLastTime = glfwGetTime();
     int frameCount = 0;
-
+    // 消抖 (比glfwGetTime()计时要高效)
     static bool mKeyPressed = false;
     static bool eKeyPressed = false;
     static bool qKeyPressed = false;
+    static bool pKeyPressed = false;
 
 
     while (!glfwWindowShouldClose(window)) {
@@ -252,6 +267,19 @@ void Game::Run() {
             frameCount = 0;
             fpsLastTime = currentFrame;
         }
+
+        // 暂停bgm
+        if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
+            if (!pKeyPressed){
+                isBgmPause = !isBgmPause;
+                audio.pause_bgm(isBgmPause);
+                pKeyPressed = true; // 这样长按就只会执行一次
+            }
+        } else pKeyPressed = false;
+             
+    
+        // 音频更新（清理已结束的音效）
+        audio.update();    
 
 
         // 处理终端导致的鼠标状态变更
@@ -291,7 +319,10 @@ void Game::Run() {
         } else qKeyPressed = false;
 
         if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
-            if (!eKeyPressed) { myMenu.Interact(); eKeyPressed = true; }
+            if (!eKeyPressed) { 
+                myMenu.Interact(); eKeyPressed = true; 
+                audio.play_sfx("assets/sound/MenuSelectionClick.wav", 0.8f);
+            }
         } else eKeyPressed = false;
 
         myMenu.Update(camera, deltaTime);
@@ -373,7 +404,7 @@ void Game::Run() {
             sceneTree.Clear();
             for (GameObject* obj : Level::Instance()._objects) {
             sceneTree.Insert(obj);
-        }
+            }
         }
  
         // ==========================================
