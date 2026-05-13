@@ -10,7 +10,6 @@
 #include "PlayerWeapon.h"
 
 
-
 // 全局静态指针，用于回调函数访问
 static Game* g_Game = nullptr; 
 
@@ -177,6 +176,8 @@ bool Game::Init(const char* title) {
         std::cout << "Failed to initialize GLAD" << std::endl;
         return false;
     }
+
+
     // 开启深度测试 和 面剔除
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -250,8 +251,8 @@ void Game::Run() {
     static bool qKeyPressed = false;
     static bool pKeyPressed = false;
 
-
     while (!glfwWindowShouldClose(window)) {
+
         // 帧率限制器
         limiter.wait();
 
@@ -342,7 +343,6 @@ void Game::Run() {
             sceneTree.Insert(obj);
         }
 
-
         // 玩家碰撞box 直接每帧创建一个对象就好 没什么性能消耗
         playerBox = AABB::CreateFromCenterAndSize(camera.Position, glm::vec3(0.5f,0.5f,0.5f));
 
@@ -406,11 +406,12 @@ void Game::Run() {
             sceneTree.Insert(obj);
             }
         }
- 
+
         // ==========================================
         // 渲染剔除优化
         // ==========================================
         // 给摄像机定一个可见范围（比如周围 20 米的矩形框）
+
         float viewDist = 25.0f; 
         Rect2D cameraViewRect = {
             camera.Position.x - viewDist, camera.Position.z - viewDist,
@@ -434,7 +435,6 @@ void Game::Run() {
             return a->modelName < b->modelName;
         });
       
-
         // --- 渲染流程开始 ---
         // 如果灯源旋转
         if (lightRotate){
@@ -520,6 +520,5 @@ void Game::Run() {
 
         glfwSwapBuffers(window);
         glfwPollEvents();
-
     }
 }

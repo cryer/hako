@@ -89,7 +89,12 @@ bool AudioManager::play_bgm(const std::string& filepath, float volume) {
     
     // 初始化 BGM
     // 注意：这里 flags 传 0，表示加载到内存。如果文件很大，可以传 MA_SOUND_FLAG_STREAM
-    ma_result res = ma_sound_init_from_file(engine, filepath.c_str(), 0, nullptr, nullptr, bgm_sound);
+    ma_result res = ma_sound_init_from_file(engine, 
+                                            filepath.c_str(), 
+                                            MA_SOUND_FLAG_STREAM, // 流式读取，不占内存
+                                            nullptr, 
+                                            nullptr, 
+                                            bgm_sound);
     
     if (res != MA_SUCCESS) {
         std::cerr << "[Audio] BGM load failed: " << ma_result_description(res) << "\n";
@@ -136,17 +141,15 @@ void AudioManager::update() {
 
     std::lock_guard<std::mutex> lock(sfx_mutex);
     
-    // 逆向遍历或 erase-remove idiom 清理已结束的音效
-    for (auto it = active_sfx.begin(); it != active_sfx.end(); ) {
-        ma_sound* s = *it;
-        
-        // 检查是否还在播放
+    // 倒序遍历，安全且没有大量元素前移的开销
+    for (int i = active_sfx.size() - 1; i >= 0; --i) {
+        ma_sound* s = active_sfx[i];
         if (!ma_sound_is_playing(s)) {
             ma_sound_uninit(s);
             delete s;
-            it = active_sfx.erase(it);
-        } else {
-            ++it;
+            // 把最后一个元素覆盖到当前位置，然后删掉末尾（O(1) 删除法）
+            active_sfx[i] = active_sfx.back();
+            active_sfx.pop_back();
         }
     }
 }
