@@ -27,9 +27,7 @@ AABB AABB::GetTransformed(const glm::mat4& transform) const {
 // 同时需要保证包围盒尺寸不变
 bool ResolveCollision(AABB& moving, const AABB& staticObs) {
     if (moving.IsSeparated(staticObs)) return false;
-
-    // std::cout << "collison happend \n";
-    
+  
     glm::vec3 overlap = moving.GetOverlap(staticObs);
     glm::vec3 absOverlap = glm::abs(overlap);
     

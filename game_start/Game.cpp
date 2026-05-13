@@ -4,6 +4,7 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <algorithm>
+#include <execution>
 
 #include "Game.h"
 #include "ResourceManager.h"
@@ -254,7 +255,7 @@ void Game::Run() {
     while (!glfwWindowShouldClose(window)) {
 
         // 帧率限制器
-        limiter.wait();
+        // limiter.wait();
 
         float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
@@ -347,7 +348,7 @@ void Game::Run() {
         playerBox = AABB::CreateFromCenterAndSize(camera.Position, glm::vec3(0.5f,0.5f,0.5f));
 
         // ==========================================
-        // 2物理与触发器检测 (从遍历全部，变成只查附近)
+        // 物理与触发器检测 (从遍历全部，变成只查附近)
         // ==========================================
         // 将玩家包围盒转为 2D 矩形
         Rect2D playerRect = {playerBox.min.x, playerBox.min.z, playerBox.max.x, playerBox.max.z};
@@ -356,19 +357,36 @@ void Game::Run() {
 
         std::string levelToLoad = "";
         
-        // --- 游戏逻辑更新 (解耦重点：实体自己管自己的运算) ---
-        for (auto& obj : Level::Instance()._objects) {
+        // --- 游戏逻辑更新 (串行更新) ---
+        // for (auto& obj : Level::Instance()._objects) {
         
-            // 同步全局 showGun 状态给具体武器
-            if (obj->name == "M416") {
-                obj->isVisible = showGun;
-            }
+        //     // 同步全局 showGun 状态给具体武器
+        //     if (obj->name == "M416") {
+        //         obj->isVisible = showGun;
+        //     }
           
-            // 只有当物体激活/可见时，才执行它的逻辑更新
-            if (obj->isVisible) {
-                obj->Update(deltaTime);
-            }
+        //     // 只有当物体激活/可见时，才执行它的逻辑更新
+        //     // 当物体多的，Update变复杂的时候，且各自的Update只修改自身的状态的时候
+        //     // Update更新最好使用并行，利用C++17的execution库的for_each即可
+        //     // 不过需要先把showGun先单独提取出去，防止并行修改同一变量
+        //     if (obj->isVisible) {
+        //         obj->Update(deltaTime);
+        //     }
+        // }
+        auto& objects = Level::Instance()._objects;
+        // 串行同步 showGun
+        for (auto* obj : objects) {
+            if (obj->name == "M416")
+                obj->isVisible = showGun;
         }
+
+        // 并行更新[object少于1，200可能没什么变化，但至少没有副作用]
+        std::for_each(std::execution::par, objects.begin(), objects.end(),
+            [this](GameObject* obj) {
+                if (obj && obj->isVisible)
+                    obj->Update(deltaTime);
+            });
+
         // 更新逻辑还是全局，只有碰撞检测用四叉树查询附近
         for (auto obj : nearPlayerObjects) {
             if (obj->isTrigger) {
@@ -410,7 +428,7 @@ void Game::Run() {
         // ==========================================
         // 渲染剔除优化
         // ==========================================
-        // 给摄像机定一个可见范围（比如周围 20 米的矩形框）
+        // 给摄像机定一个可见范围
 
         float viewDist = 25.0f; 
         Rect2D cameraViewRect = {
@@ -423,17 +441,25 @@ void Game::Run() {
         // 然后下面所有的object渲染，都使用visibleObjects，而不是sceneObjects
 
         // ==========================================
-        // === 优化：按着色器与模型进行状态排序（批处理）===
+        // === 优化：按着色器与模型进行状态排序（批处理 | 串行 此处可并行）===
         // ==========================================
-        std::sort(visibleObjects.begin(), visibleObjects.end(),[](GameObject* a, GameObject* b) {
-            // 第一优先级：按 Shader 排序 (减少 glUseProgram 调用)
-            if (a->shaderName != b->shaderName) {
-                // std::string是可以直接按字典序比较大小的，有重载运算符实现
-                return a->shaderName < b->shaderName;
-            }
-            // 第二优先级：按 模型 排序 (减少 VAO/VBO 切换)
-            return a->modelName < b->modelName;
-        });
+        // std::sort(visibleObjects.begin(), visibleObjects.end(),[](GameObject* a, GameObject* b) {
+        //     // 第一优先级：按 Shader 排序 (减少 glUseProgram 调用)
+        //     if (a->shaderName != b->shaderName) {
+        //         // std::string是可以直接按字典序比较大小的，有重载运算符实现
+        //         return a->shaderName < b->shaderName;
+        //     }
+        //     // 第二优先级：按 模型 排序 (减少 VAO/VBO 切换)
+        //     return a->modelName < b->modelName;
+        // });
+
+        // 并行排序可见物体
+        std::sort(std::execution::par, visibleObjects.begin(), visibleObjects.end(),
+            [](GameObject* a, GameObject* b) {
+                if (a->shaderName != b->shaderName)
+                    return a->shaderName < b->shaderName;
+                return a->modelName < b->modelName;
+            });
       
         // --- 渲染流程开始 ---
         // 如果灯源旋转
