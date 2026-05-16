@@ -29,8 +29,6 @@ public:
     char triggerNameBuffer[256] = "New_Trigger_N";
     // 模型名缓冲区
     char modelNameBuffer[256] = "name before add!";
-    // 打开文件对话框并添加模型
-    void AddModelFromFile(Game* game, const std::string& name);
 
     // 在你的主循环渲染 UI 阶段调用
     void RenderUI(Game* game);
