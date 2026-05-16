@@ -109,6 +109,12 @@ GameObject* Level::CreateObjectFromJson(const nlohmann::json& j) {
         std::string shaderId = j.value("shader", "standard");
         std::string type = j.value("type", "static");
 
+        // 如果模型未预加载，则从存储的路径动态加载
+        std::string modelFile = j.value("model_file", "");
+        if (!modelFile.empty() && ResourceManager::GetModel(modelId) == nullptr) {
+            ResourceManager::LoadModel(modelId, modelFile);
+        }
+
         // 支持你原有的不同派生类，这就是工厂模式的雏形
         if (type == "animal") {
             go = new Animal(name, modelId, shaderId); // 如果你有Animal类
@@ -144,6 +150,8 @@ nlohmann::json Level::CreateJsonFromObject(GameObject* obj) {
     } else {
         j["model"] = obj->modelName;
         j["shader"] = obj->shaderName;
+        if (!obj->modelPath.empty())
+            j["model_file"] = obj->modelPath;
         j["collision"] = obj->hasCollision;
     }
 

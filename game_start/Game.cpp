@@ -268,17 +268,7 @@ void Game::Run() {
             glfwSetWindowTitle(window, ("FPS: " + std::to_string(int(fps))).c_str());
             frameCount = 0;
             fpsLastTime = currentFrame;
-        }
-
-        // 暂停bgm
-        if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
-            if (!pKeyPressed){
-                isBgmPause = !isBgmPause;
-                audio.pause_bgm(isBgmPause);
-                pKeyPressed = true; // 这样长按就只会执行一次
-            }
-        } else pKeyPressed = false;
-             
+        }         
     
         // 音频更新（清理已结束的音效）
         audio.update();    
@@ -309,23 +299,7 @@ void Game::Run() {
             }
             lastEditorVisible = currentEditorVisible;
         }
-
-        // 切换地图编辑器状态(消抖)
-        if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS) {
-            if (!mKeyPressed) { LevelEditor::Instance().isVisible = !LevelEditor::Instance().isVisible; mKeyPressed = true; }
-        } else mKeyPressed = false;
-
-        // --- GazeMenu 输入与逻辑 ---
-        if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-            if (!qKeyPressed) { myMenu.Toggle(camera); qKeyPressed = true; }
-        } else qKeyPressed = false;
-
-        if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
-            if (!eKeyPressed) { 
-                myMenu.Interact(); eKeyPressed = true; 
-                audio.play_sfx("assets/sound/MenuSelectionClick.wav", 0.8f);
-            }
-        } else eKeyPressed = false;
+        
 
         myMenu.Update(camera, deltaTime);
 
@@ -333,6 +307,34 @@ void Game::Run() {
         // --- 玩家输入 ---
         if (!currentTerminalVisible) {
             ProcessInput();
+
+            // --- GazeMenu 输入与逻辑 ---
+            if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
+                if (!qKeyPressed) { myMenu.Toggle(camera); qKeyPressed = true; }
+            } else qKeyPressed = false;
+
+            if (myMenu.IsActive()){
+                if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
+                    if (!eKeyPressed) { 
+                        myMenu.Interact(); eKeyPressed = true; 
+                        audio.play_sfx("assets/sound/MenuSelectionClick.wav", 0.8f);
+                    }
+                } else eKeyPressed = false;
+            }
+
+            // 切换地图编辑器状态(消抖)
+            if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS) {
+                if (!mKeyPressed) { LevelEditor::Instance().isVisible = !LevelEditor::Instance().isVisible; mKeyPressed = true; }
+            } else mKeyPressed = false;
+
+            // 暂停bgm
+            if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
+                if (!pKeyPressed){
+                    isBgmPause = !isBgmPause;
+                    audio.pause_bgm(isBgmPause);
+                    pKeyPressed = true; // 这样长按就只会执行一次
+                }
+            } else pKeyPressed = false;
         }
 
 

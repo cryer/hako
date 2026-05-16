@@ -39,6 +39,8 @@ public:
     std::string shaderName;
     std::string type = "static";
 
+    std::string modelPath;  // 模型文件路径（Add Model 导入的模型用于重新加载）
+
     AABB localAABB;  
     bool isVisible = true;
     bool isDynamic = false;
