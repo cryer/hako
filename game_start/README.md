@@ -11,6 +11,8 @@
 
 ![](https://github.com/cryer/hako/raw/master/docs/res/map_editor.jpg)
 
+![](https://github.com/cryer/hako/raw/master/docs/res/map_editor2.jpg)
+
 - 悬浮菜单
 
 ![](https://github.com/cryer/hako/raw/master/docs/res/floatting_menu.jpg)
