@@ -95,7 +95,8 @@ public:
                 number = std::to_string(heightNr++); 
 
             
-            glUniform1i(glGetUniformLocation(shader.ID, (name + number).c_str()), i);
+            // glUniform1i(glGetUniformLocation(shader.ID, (name + number).c_str()), i);
+            shader.setInt(name + number, i);
             glBindTexture(GL_TEXTURE_2D, textures[i].id);
         }
         

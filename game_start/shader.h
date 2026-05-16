@@ -10,18 +10,21 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <unordered_map> // 缓存
 
 
 class Shader
 {
 public:
     unsigned int ID;
-    // constructor generates the shader on the fly
-    // ------------------------------------------------------------------------
+    // uniform 位置缓存（避免每帧查询 OpenGL 驱动）
+    // 缓存不影响const逻辑，所以用mutable
+    mutable std::unordered_map<std::string, GLint> m_uniformCache;
+
     Shader(const char* vertexPath, const char* fragmentPath)
     {
 
-        // 👇 提取纯文件名（去掉路径）
+        //  提取纯文件名（去掉路径）
         auto getFileName = [](const char* path) -> std::string {
             std::string s(path);
             size_t pos = s.find_last_of("/\\");
@@ -81,73 +84,78 @@ public:
         glAttachShader(ID, fragment);
         glLinkProgram(ID);
         checkCompileErrors(ID, "PROGRAM", vertexName + " + " + fragmentName);
-        // delete the shaders as they're linked into our program now and no longer necessary
         glDeleteShader(vertex);
         glDeleteShader(fragment);
     }
-    // activate the shader
-    // ------------------------------------------------------------------------
+
     void use() 
     { 
         glUseProgram(ID); 
     }
-    // utility uniform functions
-    // ------------------------------------------------------------------------
+
     void setBool(const std::string &name, bool value) const
     {         
-        glUniform1i(glGetUniformLocation(ID, name.c_str()), (int)value); 
+        // glUniform1i(glGetUniformLocation(ID, name.c_str()), (int)value); 
+        glUniform1i(loc(name), (int)value); 
     }
     // ------------------------------------------------------------------------
     void setInt(const std::string &name, int value) const
     { 
-        glUniform1i(glGetUniformLocation(ID, name.c_str()), value); 
+        glUniform1i(loc(name), value); 
     }
     // ------------------------------------------------------------------------
     void setFloat(const std::string &name, float value) const
     { 
-        glUniform1f(glGetUniformLocation(ID, name.c_str()), value); 
+        glUniform1f(loc(name), value); 
     }
 
     void setFloat2(const std::string &name, float value1, float value2) const
     { 
-        glUniform2f(glGetUniformLocation(ID, name.c_str()), value1,
+        glUniform2f(loc(name), value1,
             value2); 
     }
 
     void setFloat3(const std::string &name, float value1, float value2,
         float value3) const
     { 
-        glUniform3f(glGetUniformLocation(ID, name.c_str()), value1,
+        glUniform3f(loc(name), value1,
             value2, value3); 
     }
 
     void setFloat3(const std::string &name, const glm::vec3 &vec) const
     { 
-        glUniform3fv(glGetUniformLocation(ID, name.c_str()), 
+        glUniform3fv(loc(name), 
             1, &vec[0]); 
     }
 
     void setFloat4(const std::string &name, float value1, float value2,float value3, float value4 ) const
     { 
-        glUniform4f(glGetUniformLocation(ID, name.c_str()), value1, value2,value3, value4); 
+        glUniform4f(loc(name), value1, value2,value3, value4); 
     }
 
     void setFloat4(const std::string &name, const glm::vec4 &vec) const
     { 
-        glUniform4fv(glGetUniformLocation(ID, name.c_str()), 
+        glUniform4fv(loc(name), 
             1, &vec[0]); 
     }
 
     void setMatrix4fv(const std::string &name, const glm::mat4 &mat) const
     { 
-        glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 
+        glUniformMatrix4fv(loc(name), 
             1, GL_FALSE,
             glm::value_ptr(mat)); 
     }
 
 private:
-    // utility function for checking shader compilation/linking errors.
-    // ------------------------------------------------------------------------
+    
+    GLint loc(const std::string& name) const {
+        auto it = m_uniformCache.find(name);
+        if (it != m_uniformCache.end()) return it->second;
+        GLint l = glGetUniformLocation(ID, name.c_str());
+        m_uniformCache[name] = l;
+        return l;
+    }
+
     void checkCompileErrors(unsigned int shader, std::string type, std::string name)
     {
         int success;
@@ -159,7 +167,6 @@ private:
             {
                 glGetShaderInfoLog(shader, 1024, NULL, infoLog);
                 std::cout << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
-                // 👈 添加 shader 名称
                 std::cout << " | Shader: " << name << std::endl;  
             }
         }
