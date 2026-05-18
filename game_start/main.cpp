@@ -29,6 +29,10 @@ int main() {
     ResourceManager::LoadShader("floor", "shaders/floor.vs", "shaders/floor.fs");
     ResourceManager::LoadShader("light", "shaders/light.vs", "shaders/light.fs");
     ResourceManager::LoadShader("menu", "shaders/menu_shader.vs", "shaders/menu_shader.fs");
+    // 实例渲染 模型着色器
+    ResourceManager::LoadShader("instanced_standard", "shaders/instanced_standard.vs", "shaders/model_load.fs");
+    // 实例渲染深度着色器
+    ResourceManager::LoadShader("instanced_depth", "shaders/instanced_depth.vs", "shaders/depth_shader.fs");
 
     // 3. 加载纹理与天空盒资源
     ResourceManager::LoadTexture("wood", "assets/wall.jpg");
@@ -70,6 +74,7 @@ int main() {
     ResourceManager::LoadModel("greenTree", "assets/scenes/environoment/Tree_Green_01.obj");
     ResourceManager::LoadModel("redTree", "assets/scenes/environoment/WizardTree.obj");
     ResourceManager::LoadModel("trunk", "assets/scenes/environoment/Trunk_01.obj");
+    ResourceManager::LoadModel("grass", "assets/scenes/environoment/Grass.obj");
 
     
 
@@ -175,6 +180,34 @@ int main() {
 
     PlayerWeapon* m4 = new PlayerWeapon(m416, &game.camera);
     Level::Instance().AddObject(m4);
+
+    // ====== 实例化渲染测试：用 plant 模型生成 10x20 实例网格 ======
+    {
+        srand(42);
+        GameObject* instTest = new GameObject("InstancedGrass", "grass", "instanced_standard");
+        instTest->useInstancing = true;
+        instTest->castShadow = false;
+        instTest->hasCollision = false;
+
+        int cols = 20;
+        int rows = 10;
+        float spacing = 2.0f;
+        float startX = -(cols * spacing) / 2.0f;
+        float startZ = -(rows * spacing) / 2.0f;
+        for (int i = 0; i < cols; i++) {
+            for (int j = 0; j < rows; j++) {
+                glm::mat4 mat(1.0f);
+                float ox = startX + i * spacing + (rand() % 100 - 50) / 50.0f * 0.5f;
+                float oz = startZ + j * spacing + (rand() % 100 - 50) / 50.0f * 0.5f;
+                mat = glm::translate(mat, glm::vec3(ox, -0.4f, oz));
+                mat = glm::rotate(mat, glm::radians((float)(rand() % 360)), glm::vec3(0.0f, 1.0f, 0.0f));
+                float s = 0.6f + (rand() % 100) / 100.0f * 0.6f;
+                mat = glm::scale(mat, glm::vec3(s));
+                instTest->instances.push_back(mat);
+            }
+        }
+        Level::Instance().AddObject(instTest);
+    }
  
     // 启动游戏主循环！
     game.Run();

@@ -2,6 +2,7 @@
 #include "mesh.h"
 
 #include <GLFW/glfw3.h>
+#include <unordered_map>
 
 Renderer::Renderer() {
     InitPrimitives();
@@ -69,10 +70,31 @@ void Renderer::RenderShadowPass(
     glCullFace(GL_FRONT); 
 
     for (auto obj : objects) {
-        // 如果不可见，直接跳过生成阴影
-        if (!obj->isVisible) continue; 
-        if(obj->name != "M416") // 武器不需要投射阴影(硬编码，待优化#TODO)
+        if (!obj->isVisible) continue;
+        if (obj->useInstancing) continue; // 使用实例化渲染的对象跳过普通的Draw
+        if(obj->name != "M416")
             obj->Draw(depthShader);
+    }
+
+    Shader* instancedDepthShader = ResourceManager::GetShader("instanced_depth");
+    if (instancedDepthShader) {
+        instancedDepthShader->use();
+        instancedDepthShader->setMatrix4fv("lightSpaceMatrix", lightSpaceMatrix);
+
+        std::unordered_map<std::string, std::vector<glm::mat4>> instancedGroups;
+        for (auto obj : objects) {
+            if (!obj->isVisible) continue;
+            if (!obj->useInstancing || obj->instances.empty()) continue;
+            if (!obj->castShadow) continue;
+            auto& group = instancedGroups[obj->modelName];
+            group.insert(group.end(), obj->instances.begin(), obj->instances.end());
+        }
+
+        for (auto& [modelName, matrices] : instancedGroups) {
+            Model* model = ResourceManager::GetModel(modelName);
+            if (!model) continue;
+            model->DrawInstanced(*instancedDepthShader, matrices, 0);
+        }
     }
 
     glCullFace(GL_BACK); 
@@ -126,13 +148,15 @@ void Renderer::RenderMainPass(
     for (auto obj : objects) {
         // 如果不可见，跳过主场景渲染
         if (!obj->isVisible) continue;
+        // 实例化对象跳过单独绘制，统一在下个pass批处理
+        if (obj->useInstancing) continue;
         // 视锥体剔除(只剔除渲染部分，update和碰撞检测保持计算
         // 否则不在视野中的实体就不更新逻辑了以及倒着走
         // 就能无视碰撞。主要节省大量的drawcall)
         AABB worldAABB = obj->GetWorldAABB();
         if (!frustum.isBoxVisible(worldAABB)) continue;
 
-        // 【新增】计算模型中心到相机的距离，以此划分 LOD 级别
+        // 计算模型中心到相机的距离，以此划分 LOD 级别
         glm::vec3 center = (worldAABB.min + worldAABB.max) * 0.5f;
         float distance = glm::distance(camera.Position, center);
 
@@ -143,11 +167,52 @@ void Renderer::RenderMainPass(
             lodLevel = 1; // 距离在 15-35 之间，切为 50% (LOD1)
         }
 
-        // obj->Draw(shader);
-        // 【修改】传入 lodLevel。
-        // ※ 前提说明：需要在你的 GameObject::Draw 方法中加上 int lodLevel = 0 参数，
-        // 并在 GameObject 内部转调 Model->Draw(shader, lodLevel);
+        // 传入 lodLevel。
         obj->Draw(shader, lodLevel); 
+    }
+
+    // ======== 实例化渲染批处理 ========
+    Shader* instancedShader = ResourceManager::GetShader("instanced_standard");
+    if (instancedShader) {
+        instancedShader->use();
+        instancedShader->setFloat3("dirLight.direction", sunDir);
+        instancedShader->setFloat3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
+        instancedShader->setFloat3("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
+        instancedShader->setFloat3("dirLight.specular", 0.5f, 0.5f, 0.5f);
+        instancedShader->setFloat3("light.position", lightPos);
+        instancedShader->setFloat3("light.ambient",  0.2f, 0.2f, 0.2f);
+        instancedShader->setFloat3("light.diffuse",  0.5f, 0.5f, 0.5f);
+        instancedShader->setFloat3("light.specular", 1.0f, 1.0f, 1.0f);
+        instancedShader->setFloat("light.constant", 1.0f);
+        instancedShader->setFloat("light.linear", 0.09f);
+        instancedShader->setFloat("light.quadratic", 0.032f);
+        instancedShader->setFloat3("viewPos", camera.Position);
+        instancedShader->setFloat("shininess", 32.0f);
+        instancedShader->setMatrix4fv("projection", projection);
+        instancedShader->setMatrix4fv("view", view);
+        instancedShader->setMatrix4fv("lightSpaceMatrix", lightSpaceMatrix);
+        instancedShader->setBool("shadowOn", shadowOn);
+        glActiveTexture(GL_TEXTURE10);
+        glBindTexture(GL_TEXTURE_2D, depthMap);
+        instancedShader->setInt("shadowMap", 10);
+
+        std::unordered_map<std::string, std::vector<glm::mat4>> instancedGroups;
+        for (auto obj : objects) {
+            if (!obj->isVisible) continue;
+            if (!obj->useInstancing || obj->instances.empty()) continue;
+
+            AABB worldAABB = obj->GetWorldAABB();
+            if (!frustum.isBoxVisible(worldAABB)) continue;
+
+            auto& group = instancedGroups[obj->modelName];
+            group.insert(group.end(), obj->instances.begin(), obj->instances.end());
+        }
+
+        for (auto& [modelName, matrices] : instancedGroups) {
+            Model* model = ResourceManager::GetModel(modelName);
+            if (!model) continue;
+            model->DrawInstanced(*instancedShader, matrices, 0);
+        }
     }
 }
 

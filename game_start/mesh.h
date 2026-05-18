@@ -70,6 +70,68 @@ public:
 
         setupMesh();
     }
+    void SetupInstanceAttribs()
+    {
+        if (instanceAttribsReady) return;
+        glBindVertexArray(VAO);
+        glGenBuffers(1, &instanceVBO);
+        glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+        size_t vec4Size = sizeof(glm::vec4);
+        for (int i = 0; i < 4; i++) {
+            glEnableVertexAttribArray(7 + i);
+            glVertexAttribPointer(7 + i, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(i * vec4Size));
+            glVertexAttribDivisor(7 + i, 1);
+        }
+        glBindVertexArray(0);
+        instanceAttribsReady = true;
+    }
+
+    void DrawInstanced(Shader &shader, const std::vector<glm::mat4>& instanceData, int lodLevel = 0)
+    {
+        lodLevel = std::max(0, std::min(lodLevel, 2));
+
+        // 首次调用时配置实例化属性
+        if (!instanceAttribsReady) SetupInstanceAttribs();
+
+        // 上传实例矩阵数据
+        glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+        glBufferData(GL_ARRAY_BUFFER, instanceData.size() * sizeof(glm::mat4), instanceData.data(), GL_DYNAMIC_DRAW);
+
+        // 绑定纹理
+        unsigned int diffuseNr  = 1;
+        unsigned int specularNr = 1;
+        unsigned int normalNr   = 1;
+        unsigned int heightNr   = 1;
+        for(unsigned int i = 0; i < textures.size(); i++)
+        {
+            glActiveTexture(GL_TEXTURE0 + i);
+            std::string number;
+            std::string name = textures[i].type;
+            if(name == "texture_diffuse")
+                number = std::to_string(diffuseNr++);
+            else if(name == "texture_specular")
+                number = std::to_string(specularNr++);
+            else if(name == "texture_normal")
+                number = std::to_string(normalNr++);
+             else if(name == "texture_height")
+                number = std::to_string(heightNr++);
+
+            shader.setInt(name + number, i);
+            glBindTexture(GL_TEXTURE_2D, textures[i].id);
+        }
+
+        glBindVertexArray(VAO);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[lodLevel]);
+        glDrawElementsInstanced(GL_TRIANGLES, static_cast<unsigned int>(indices[lodLevel].size()), GL_UNSIGNED_INT, 0, static_cast<GLsizei>(instanceData.size()));
+        glBindVertexArray(0);
+
+        for(unsigned int i = 0; i < textures.size(); i++) {
+            glActiveTexture(GL_TEXTURE0 + i);
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
+        glActiveTexture(GL_TEXTURE0);
+    }
+
     // Draw 函数接收 lodLevel，默认为 0
     void Draw(Shader &shader, int lodLevel = 0)
     {
@@ -117,8 +179,9 @@ public:
     }
 
 private:
-    // 我们需要 3 个 EBO
     unsigned int VBO, EBO[3];
+    unsigned int instanceVBO = 0;
+    bool instanceAttribsReady = false;
 
     void setupMesh()
     {

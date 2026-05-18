@@ -45,6 +45,9 @@ public:
     bool isVisible = true;
     bool isDynamic = false;
     bool hasCollision = false; // 默认不参与碰撞
+    bool useInstancing = false; // 是否使用实例化渲染
+    bool castShadow = true;     // 是否投射阴影
+    std::vector<glm::mat4> instances; // 实例化对象的模型矩阵列表
 
 
     // === 生命周期与触发器属性 ===

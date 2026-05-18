@@ -64,6 +64,14 @@ public:
             meshes[i].Draw(shader, currentLOD);
     }
 
+    void DrawInstanced(Shader &shader, const std::vector<glm::mat4>& instances, int lodLevel = 0)
+    {
+        lodLevel = std::max(0, std::min(lodLevel, 2));
+        if (lodLevel != currentLOD) currentLOD = lodLevel;
+        for (unsigned int i = 0; i < meshes.size(); i++)
+            meshes[i].DrawInstanced(shader, instances, currentLOD);
+    }
+
     // 强制给模型的所有 Mesh 设置一张漫反射贴图（无视原有的 mtl 设置）
     void SetDiffuseTexture(const std::string& textureFilename)
     {
