@@ -35,8 +35,7 @@ public:
     
     std::string levelName;
     glm::vec3 playerSpawn = glm::vec3(0.0f, 0.0f, 0.0f);
-    // 使用unique_ptr会导致写法更繁琐一些，因为_objects需要在Game类循环中频繁使用，以及碰撞检测
-    // 四叉树等，就用原始指针提供直接访问接口更清晰
+    bool hasTerrain = false;
     std::vector<GameObject*> _objects;
   
 

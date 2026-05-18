@@ -45,7 +45,8 @@ add_executable(game
 	Level.cpp
 	LevelEditor.cpp
 	QuadTree.cpp
-	AudioManager.cpp)
+	AudioManager.cpp
+	Terrain.cpp)
 
 target_link_libraries(game PRIVATE glad::glad glfw glm::glm assimp::assimp imgui::imgui meshoptimizer::meshoptimizer  ImGuiFileDialog winmm)
 

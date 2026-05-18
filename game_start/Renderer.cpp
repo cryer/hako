@@ -238,6 +238,42 @@ void Renderer::RenderFloor(Camera& camera, glm::mat4 lightSpaceMatrix, glm::vec3
     glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
+void Renderer::RenderTerrainShadow(Terrain& terrain, const glm::mat4& lightSpaceMatrix) {
+    Shader* depthShader = ResourceManager::GetShader("depth");
+    depthShader->use();
+    depthShader->setMatrix4fv("lightSpaceMatrix", lightSpaceMatrix);
+    depthShader->setMatrix4fv("model", glm::mat4(1.0f));
+
+    glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    glCullFace(GL_FRONT);
+    terrain.Draw();
+    glCullFace(GL_BACK);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void Renderer::RenderTerrain(Terrain& terrain, Camera& camera, glm::mat4 lightSpaceMatrix, glm::vec3 lightPos, bool shadowOn, float screenWidth, float screenHeight) {
+    Shader* terrainShader = ResourceManager::GetShader("terrain");
+    terrainShader->use();
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), screenWidth / screenHeight, 0.1f, 100.0f);
+    terrainShader->setMatrix4fv("projection", projection);
+    terrainShader->setMatrix4fv("view", camera.GetViewMatrix());
+    terrainShader->setFloat3("viewPos", camera.Position);
+    terrainShader->setFloat3("lightPos", lightPos);
+    terrainShader->setMatrix4fv("lightSpaceMatrix", lightSpaceMatrix);
+    terrainShader->setBool("shadowOn", shadowOn);
+
+    glActiveTexture(GL_TEXTURE10);
+    glBindTexture(GL_TEXTURE_2D, depthMap);
+    terrainShader->setInt("shadowMap", 10);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, ResourceManager::GetTexture("wood"));
+    terrainShader->setInt("terrainTexture", 0);
+
+    terrain.Draw();
+}
+
 void Renderer::RenderSkybox(Camera& camera, float screenWidth, float screenHeight) {
     glDepthFunc(GL_LEQUAL);
     Shader* skyboxShader = ResourceManager::GetShader("skybox");

@@ -15,19 +15,20 @@
 #include "QuadTree.h"
 #include "FpsLimiter.h"
 #include "AudioManager.h"
+#include "Terrain.h"
 
 class Game {
 public:
     int width, height;
     GLFWwindow* window;
 
-    // 组件声明
     Camera camera;
     DebugTerminal terminal;
     GazeMenu myMenu;
     AABB playerBox;
     Frustum frustum;
     QuadTree sceneTree;
+    Terrain terrain;
 
     FrameLimiter limiter;
     AudioManager audio;
@@ -59,12 +60,15 @@ public:
     bool lastTerminalVisible = false;
     bool lastEditorVisible = false;
     bool isBgmPause = false;
+    bool needTerrainRegen = false;
+    bool useTerrain = false;
 
     Game(int w, int h);
     ~Game();
 
     bool Init(const char* title);
     void Run();
+    void SetupForLevel();
 
     void ProcessInput();
     void SetupMenu();

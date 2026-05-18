@@ -196,6 +196,16 @@ bool Game::Init(const char* title) {
     terminal.BindBool("lightRotate", &lightRotate);
     terminal.BindBool("showBox", &showBox);
 
+    terminal.BindFloat("terrainMaxHeight",  &terrain.config.maxHeight);
+    terminal.BindFloat("terrainNoiseScale", &terrain.config.noiseScale);
+    terminal.BindInt("terrainOctaves",      &terrain.config.octaves);
+    terminal.BindInt("terrainSeed",         &terrain.config.seed);
+
+    terminal.RegisterCommand("regen_terrain", [&](const std::vector<std::string>&) {
+        needTerrainRegen = true;
+        terminal.AddLog("Terrain regeneration scheduled.");
+    }, "Apply terrain config changes");
+
     terminal.RegisterCommand("reset", [&](const std::vector<std::string>& args) {
         showGun = false;
         shadowOn = false;
@@ -240,6 +250,50 @@ void Game::ProcessInput() {
                 weapon->Fire(static_cast<float>(glfwGetTime()));
             }
         }
+    }
+}
+
+void Game::SetupForLevel() {
+    if (Level::Instance().hasTerrain) {
+        if (!useTerrain) {
+            Terrain::Config cfg;
+            cfg.worldSize  = 200.0f;
+            cfg.resolution = 256;
+            cfg.maxHeight  = 5.0f;
+            cfg.noiseScale = 0.02f;
+            cfg.octaves    = 4;
+            cfg.seed       = 42;
+            terrain.Generate(cfg);
+            useTerrain = true;
+        }
+
+        srand(42);
+        GameObject* instTest = new GameObject("InstancedGrass", "grass", "instanced_standard");
+        instTest->useInstancing = true;
+        instTest->castShadow = false;
+        instTest->hasCollision = false;
+
+        int cols = 20;
+        int rows = 10;
+        float spacing = 2.0f;
+        float startX = -(cols * spacing) / 2.0f;
+        float startZ = -(rows * spacing) / 2.0f;
+        for (int i = 0; i < cols; i++) {
+            for (int j = 0; j < rows; j++) {
+                glm::mat4 mat(1.0f);
+                float ox = startX + i * spacing + (rand() % 100 - 50) / 50.0f * 0.5f;
+                float oz = startZ + j * spacing + (rand() % 100 - 50) / 50.0f * 0.5f;
+                float oy = terrain.GetHeight(ox, oz);
+                mat = glm::translate(mat, glm::vec3(ox, oy, oz));
+                mat = glm::rotate(mat, glm::radians((float)(rand() % 360)), glm::vec3(0.0f, 1.0f, 0.0f));
+                float s = 0.6f + (rand() % 100) / 100.0f * 0.6f;
+                mat = glm::scale(mat, glm::vec3(s));
+                instTest->instances.push_back(mat);
+            }
+        }
+        Level::Instance().AddObject(instTest);
+    } else {
+        useTerrain = false;
     }
 }
 
@@ -423,8 +477,9 @@ void Game::Run() {
 
             sceneTree.Clear();
             for (GameObject* obj : Level::Instance()._objects) {
-            sceneTree.Insert(obj);
+                sceneTree.Insert(obj);
             }
+            SetupForLevel();
         }
 
         // ==========================================
@@ -463,6 +518,11 @@ void Game::Run() {
                 return a->modelName < b->modelName;
             });
       
+        if (needTerrainRegen) {
+            terrain.Regenerate();
+            needTerrainRegen = false;
+        }
+
         // --- 渲染流程开始 ---
         // 如果灯源旋转
         if (lightRotate){
@@ -485,18 +545,22 @@ void Game::Run() {
         if (shadowOn) {
             glm::mat4 lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 1.0f, 20.0f);
             glm::mat4 lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
-            // glm::mat4 lightView = glm::lookAt(dirLightPos, dirLightTarget, glm::vec3(0.0, 1.0, 0.0));
             lightSpaceMatrix = lightProjection * lightView;
             // 1. 生成阴影贴图
-            // 使用visibleObjects渲染可见范围内模型
+            if (useTerrain) {
+                renderer->RenderTerrainShadow(terrain, lightSpaceMatrix);
+            }
             renderer->RenderShadowPass(visibleObjects, lightSpaceMatrix);
         }
         // 2. 主场景渲染
-        // 使用visibleObjects渲染可见范围内模型
         renderer->RenderMainPass(visibleObjects, camera, lightSpaceMatrix, lightPos, sunDir, shadowOn, (float)width, (float)height, frustum);
         
         // 3. 其他环境渲染
-        renderer->RenderFloor(camera, lightSpaceMatrix, lightPos, shadowOn, (float)width, (float)height);
+        if (useTerrain) {
+            renderer->RenderTerrain(terrain, camera, lightSpaceMatrix, lightPos, shadowOn, (float)width, (float)height);
+        } else {
+            renderer->RenderFloor(camera, lightSpaceMatrix, lightPos, shadowOn, (float)width, (float)height);
+        }
         renderer->RenderLightCube(camera, lightPos, dirLightPos,(float)width, (float)height);
         renderer->RenderSkybox(camera, (float)width, (float)height);
         if (showBox){

@@ -5,6 +5,7 @@
 #include "GameObject.h"
 #include "AABB.h"
 #include "Frustum.h"
+#include "Terrain.h"
 
 class Renderer {
 private:
@@ -41,6 +42,17 @@ public:
                     float screenWidth, 
                     float screenHeight);
 
+    void RenderTerrainShadow(Terrain& terrain,
+                             const glm::mat4& lightSpaceMatrix);
+
+    void RenderTerrain(Terrain& terrain,
+                       Camera& camera,
+                       glm::mat4 lightSpaceMatrix,
+                       glm::vec3 lightPos,
+                       bool shadowOn,
+                       float screenWidth,
+                       float screenHeight);
+
     void RenderSkybox(Camera& camera, float screenWidth, float screenHeight);
 
     void RenderLightCube(Camera& camera, 
@@ -49,7 +61,6 @@ public:
                         float screenWidth, 
                         float screenHeight);
 
-    // 绘制所有AABB线框
     void RenderAABBs(const std::vector<GameObject*>& objects, 
                     Camera& camera, 
                     float screenWidth, 

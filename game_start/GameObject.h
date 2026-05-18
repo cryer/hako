@@ -96,7 +96,7 @@ public:
     Animal(std::string n, std::string mod, std::string shd) : 
           GameObject(n, mod, shd){
              isDynamic = true;
-             
+             type = "animal";
           }
 
     void Update(float deltaTime) override {

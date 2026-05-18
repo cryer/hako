@@ -30,6 +30,7 @@ bool Level::Load(const std::string& filepath) {
     file >> levelData;
 
     levelName = levelData.value("name", "Unknown Level");
+    hasTerrain = levelData.value("terrain", false);
     if (levelData.contains("player_spawn")) {
         playerSpawn = levelData["player_spawn"].get<glm::vec3>();
     }
