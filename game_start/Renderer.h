@@ -32,7 +32,9 @@ public:
                         bool shadowOn, 
                         float screenWidth, 
                         float screenHeight,
-                        Frustum& frustum);
+                        Frustum& frustum,
+                        float windStrenth = 0.55f,
+                        float windSpeed = 1.2f);
 
 
     void RenderFloor(Camera& camera, 

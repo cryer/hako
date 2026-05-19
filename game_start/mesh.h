@@ -88,6 +88,8 @@ public:
 
     void DrawInstanced(Shader &shader, const std::vector<glm::mat4>& instanceData, int lodLevel = 0)
     {
+        shader.use();
+        
         lodLevel = std::max(0, std::min(lodLevel, 2));
 
         // 首次调用时配置实例化属性

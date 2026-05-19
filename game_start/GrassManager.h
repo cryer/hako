@@ -23,5 +23,4 @@ public:
 
 private:
     GameObject* m_object = nullptr;
-    Config m_config;
 };

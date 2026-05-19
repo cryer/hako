@@ -65,6 +65,9 @@ public:
     bool needTerrainRegen = false;
     bool useTerrain = false;
 
+    float windStrenth = 0.55f;
+    float windSpeed = 1.2f;
+
     Game(int w, int h);
     ~Game();
 

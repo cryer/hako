@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <execution>
 #include <unordered_map>
+#include <random>
 
 #include "Game.h"
 #include "ResourceManager.h"
@@ -202,6 +203,9 @@ bool Game::Init(const char* title) {
     terminal.BindInt("terrainOctaves",      &terrain.config.octaves);
     terminal.BindInt("terrainSeed",         &terrain.config.seed);
 
+    terminal.BindFloat("windStrenth",  &windStrenth);
+    terminal.BindFloat("windSpeed", &windSpeed);
+
     terminal.RegisterCommand("regen_terrain", [&](const std::vector<std::string>&) {
         needTerrainRegen = true;
         terminal.AddLog("Terrain regeneration scheduled.");
@@ -257,27 +261,41 @@ void Game::ProcessInput() {
 void Game::SetupForLevel() {
     if (Level::Instance().hasTerrain) {
         if (!useTerrain) {
-            Terrain::Config cfg;
-            cfg.worldSize  = 200.0f;
-            cfg.resolution = 256;
-            cfg.maxHeight  = 8.0f;
-            cfg.noiseScale = 0.02f;
-            cfg.octaves    = 4;
-            cfg.seed       = 42;
+            Terrain::Config cfg{
+                .worldSize  = 200.0f,
+                .resolution = 256,
+                .maxHeight  = 8.0f,
+                .noiseScale = 0.02f,
+                .octaves    = 4,
+                .seed       = 42
+            };
+
             terrain.Generate(cfg);
             useTerrain = true;
         }
 
         // ====== 草地自动生成 ======
         {
-            GrassManager::Config gcfg;
-            gcfg.density        = 0.1f;
-            gcfg.slopeThreshold = 0.55f;
-            gcfg.stepSize       = 0.8f;
-            gcfg.jitterRadius   = 0.35f;
-            gcfg.minScale       = 1.4f;
-            gcfg.maxScale       = 2.5f;
-            gcfg.seed           = 42;
+            // GrassManager::Config gcfg;
+            // gcfg.density        = 0.2f;
+            // gcfg.slopeThreshold = 0.55f;
+            // gcfg.stepSize       = 0.8f;
+            // gcfg.jitterRadius   = 0.35f;
+            // gcfg.minScale       = 5.4f;
+            // gcfg.maxScale       = 7.5f;
+            // gcfg.seed           = 42;
+
+            //C++20指定初始化器，直接初始化，不用一次构造多次赋值
+            GrassManager::Config gcfg{
+                .density        = 0.2f,
+                .slopeThreshold = 0.55f,
+                .stepSize       = 0.8f,
+                .jitterRadius   = 0.35f,
+                .minScale       = 5.4f,
+                .maxScale       = 7.5f,
+                .seed           = 42
+            };
+
             grass.Generate(terrain, gcfg);
             if (grass.GetObject()) {
                 Level::Instance().AddObject(grass.GetObject());
@@ -296,10 +314,7 @@ void Game::SetupForLevel() {
             struct TreeDef { std::string model; float weight; float minS; float maxS; };
             std::vector<TreeDef> treeDefs = {
                 {"greenTree", 0.35f, 0.8f, 1.3f},
-                {"redTree",   0.25f, 0.8f, 1.3f},
-                {"tree",      0.15f, 0.8f, 1.3f},
-                {"greenTree", 0.15f, 0.8f, 1.3f},
-                {"redTree",   0.10f, 0.8f, 1.3f},
+                {"redTree",   0.65f, 0.8f, 1.3f},
             };
 
             std::unordered_map<std::string, GameObject*> treeMap;
@@ -316,18 +331,21 @@ void Game::SetupForLevel() {
                 return obj;
             };
 
-            srand(43);
+            // 局部随机引擎，线程安全，无全局副作用
+            std::mt19937 rng(43);
+            std::uniform_real_distribution<float> dist01(0.0f, 1.0f);
+            std::uniform_real_distribution<float> distJitter(-1.0f, 1.0f);
 
             for (int gx = 0; gx < gridRes; gx++) {
                 for (int gz = 0; gz < gridRes; gz++) {
                     if (occupied[gx][gz]) continue;
-
-                    if ((rand() % 1000) / 1000.0f > 0.35f) continue;
+                    // 生成树的概率
+                    if (dist01(rng) > 0.85f) continue;
 
                     float cx = -halfSize + (gx + 0.5f) * cellSize;
                     float cz = -halfSize + (gz + 0.5f) * cellSize;
-                    float ox = cx + ((rand() % 1000) / 500.0f - 1.0f) * cellSize * 0.35f;
-                    float oz = cz + ((rand() % 1000) / 500.0f - 1.0f) * cellSize * 0.35f;
+                    float ox = cx + distJitter(rng) * cellSize * 0.35f;
+                    float oz = cz + distJitter(rng) * cellSize * 0.35f;
 
                     float h = terrain.GetHeight(ox, oz);
                     glm::vec3 n = terrain.GetNormal(ox, oz);
@@ -343,7 +361,7 @@ void Game::SetupForLevel() {
                     }
 
                     // 加权随机选树种
-                    float r = (rand() % 1000) / 1000.0f;
+                    float r = dist01(rng);
                     float acc = 0.0f;
                     int picked = 0;
                     for (int t = 0; t < (int)treeDefs.size(); t++) {
@@ -353,8 +371,8 @@ void Game::SetupForLevel() {
 
                     glm::mat4 mat(1.0f);
                     mat = glm::translate(mat, glm::vec3(ox, h, oz));
-                    mat = glm::rotate(mat, glm::radians((float)(rand() % 360)), glm::vec3(0.0f, 1.0f, 0.0f));
-                    float s = treeDefs[picked].minS + (rand() % 1000) / 1000.0f * (treeDefs[picked].maxS - treeDefs[picked].minS);
+                    mat = glm::rotate(mat, glm::radians(dist01(rng) * 360.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+                    float s = treeDefs[picked].minS + dist01(rng) * (treeDefs[picked].maxS - treeDefs[picked].minS);
                     mat = glm::scale(mat, glm::vec3(s));
 
                     ensureObj(treeDefs[picked].model)->instances.push_back(mat);
@@ -633,7 +651,7 @@ void Game::Run() {
             renderer->RenderShadowPass(visibleObjects, lightSpaceMatrix);
         }
         // 2. 主场景渲染
-        renderer->RenderMainPass(visibleObjects, camera, lightSpaceMatrix, lightPos, sunDir, shadowOn, (float)width, (float)height, frustum);
+        renderer->RenderMainPass(visibleObjects, camera, lightSpaceMatrix, lightPos, sunDir, shadowOn, (float)width, (float)height, frustum, windStrenth, windSpeed);
         
         // 3. 其他环境渲染
         if (useTerrain) {

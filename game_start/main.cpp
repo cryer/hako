@@ -32,10 +32,11 @@ int main() {
     ResourceManager::LoadShader("instanced_standard", "shaders/instanced_standard.vs", "shaders/model_load.fs");
     ResourceManager::LoadShader("instanced_depth", "shaders/instanced_depth.vs", "shaders/depth_shader.fs");
     ResourceManager::LoadShader("terrain", "shaders/terrain.vs", "shaders/terrain.fs");
+    ResourceManager::LoadShader("grass", "shaders/grass.vs", "shaders/model_load.fs");
 
     // 3. 加载纹理与天空盒资源
     ResourceManager::LoadTexture("wood", "assets/wall.jpg");
-    ResourceManager::LoadTexture("ground", "assets/ground.jpg");
+    ResourceManager::LoadTexture("ground", "assets/ground2.jpg");
     ResourceManager::LoadTexture("youtube", "assets/youtube.png");
     ResourceManager::LoadTexture("exit", "assets/exit.png");
     ResourceManager::LoadTexture("github", "assets/github.jpg");
@@ -74,7 +75,8 @@ int main() {
     ResourceManager::LoadModel("greenTree", "assets/scenes/environoment/Tree_Green_01.obj");
     ResourceManager::LoadModel("redTree", "assets/scenes/environoment/WizardTree.obj");
     ResourceManager::LoadModel("trunk", "assets/scenes/environoment/Trunk_01.obj");
-    ResourceManager::LoadModel("grass", "assets/scenes/environoment/Grass.obj");
+    // ResourceManager::LoadModel("grass", "assets/scenes/environoment/Grass.obj");
+    ResourceManager::LoadModel("grass", "assets/scenes/grass/Low Grass.obj");
 
     
 

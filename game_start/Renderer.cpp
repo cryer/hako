@@ -111,7 +111,9 @@ void Renderer::RenderMainPass(
         bool shadowOn, 
         float screenWidth, 
         float screenHeight,
-        Frustum& frustum) {
+        Frustum& frustum,
+        float windStrenth,
+        float windSpeed) {
     glViewport(0, 0, screenWidth, screenHeight);
     glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -174,6 +176,8 @@ void Renderer::RenderMainPass(
 
     // ======== 实例化渲染批处理 ========
     Shader* instancedShader = ResourceManager::GetShader("instanced_standard");
+    Shader* grassShader = ResourceManager::GetShader("grass");
+
     if (instancedShader) {
         instancedShader->use();
         instancedShader->setFloat3("dirLight.direction", sunDir);
@@ -196,6 +200,38 @@ void Renderer::RenderMainPass(
         glActiveTexture(GL_TEXTURE10);
         glBindTexture(GL_TEXTURE_2D, depthMap);
         instancedShader->setInt("shadowMap", 10);
+
+        // 草地着色器：设置相同的灯光/投影 uniform，外加风力参数
+        if (grassShader) {
+            grassShader->use();
+            grassShader->setFloat3("dirLight.direction", sunDir);
+            grassShader->setFloat3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
+            grassShader->setFloat3("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
+            grassShader->setFloat3("dirLight.specular", 0.5f, 0.5f, 0.5f);
+            grassShader->setFloat3("light.position", lightPos);
+            grassShader->setFloat3("light.ambient",  0.2f, 0.2f, 0.2f);
+            grassShader->setFloat3("light.diffuse",  0.5f, 0.5f, 0.5f);
+            grassShader->setFloat3("light.specular", 1.0f, 1.0f, 1.0f);
+            grassShader->setFloat("light.constant", 1.0f);
+            grassShader->setFloat("light.linear", 0.09f);
+            grassShader->setFloat("light.quadratic", 0.032f);
+            grassShader->setFloat3("viewPos", camera.Position);
+            grassShader->setFloat("shininess", 32.0f);
+            grassShader->setMatrix4fv("projection", projection);
+            grassShader->setMatrix4fv("view", view);
+            grassShader->setMatrix4fv("lightSpaceMatrix", lightSpaceMatrix);
+            grassShader->setBool("shadowOn", shadowOn);
+            grassShader->setInt("shadowMap", 10);
+
+            float curTime = (float)glfwGetTime();
+            grassShader->setFloat("time", curTime);
+            grassShader->setFloat3("windDirection", 0.6f, 0.0f, 0.4f);
+            grassShader->setFloat("windStrength", windStrenth);
+            grassShader->setFloat("windSpeed", windSpeed);
+        }
+
+        instancedShader->use(); // 切回默认实例化着色器
+
         // 使用3个桶分别装3个LOD的实例化model矩阵
         std::unordered_map<std::string, std::vector<glm::mat4>> instancedGroups[3];
         for (auto obj : objects) {
@@ -222,7 +258,12 @@ void Renderer::RenderMainPass(
                 if (matrices.empty()) continue;
                 Model* model = ResourceManager::GetModel(modelName);
                 if (!model) continue;
-                model->DrawInstanced(*instancedShader, matrices, lod);
+                // model->DrawInstanced(*instancedShader, matrices, lod);
+                if (modelName == "grass" && grassShader) {
+                    model->DrawInstanced(*grassShader, matrices, lod);
+                } else {
+                    model->DrawInstanced(*instancedShader, matrices, lod);
+                }
             }
         }
 
@@ -238,7 +279,7 @@ void Renderer::RenderFloor(Camera& camera, glm::mat4 lightSpaceMatrix, glm::vec3
     floorShader->setFloat3("viewPos", camera.Position);
     floorShader->setFloat3("lightPos", lightPos);
     floorShader->setFloat3("dirLight.direction", sunDir);
-    floorShader->setFloat3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
+    floorShader->setFloat3("dirLight.ambient", 0.005f, 0.005f, 0.005f);
     floorShader->setFloat3("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
     floorShader->setFloat3("dirLight.specular", 0.5f, 0.5f, 0.5f);
     floorShader->setMatrix4fv("lightSpaceMatrix", lightSpaceMatrix);
@@ -278,7 +319,7 @@ void Renderer::RenderTerrain(Terrain& terrain, Camera& camera, glm::mat4 lightSp
     terrainShader->setFloat3("viewPos", camera.Position);
     terrainShader->setFloat3("lightPos", lightPos);
     terrainShader->setFloat3("dirLight.direction", sunDir);
-    terrainShader->setFloat3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
+    terrainShader->setFloat3("dirLight.ambient", 0.005f, 0.005f, 0.005f);
     terrainShader->setFloat3("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
     terrainShader->setFloat3("dirLight.specular", 0.5f, 0.5f, 0.5f);
     terrainShader->setMatrix4fv("lightSpaceMatrix", lightSpaceMatrix);
@@ -350,6 +391,8 @@ void Renderer::RenderAABBs(const std::vector<GameObject*>& objects,
     // glEnable(GL_DEPTH_TEST); 
     glBindVertexArray(lightCubeVAO);
     for (auto obj : objects){
+        if (!obj->hasCollision) continue;
+
         AABB aabb = obj->GetWorldAABB();
         // 计算中心点 (平移量)
         glm::vec3 center = (aabb.min + aabb.max) * 0.5f;
