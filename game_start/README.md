@@ -13,6 +13,10 @@
 
 ![](https://github.com/cryer/hako/raw/master/docs/res/map_editor2.jpg)
 
+- 随机噪声地图生成系统
+
+![](https://github.com/cryer/hako/raw/master/docs/res/terrain.jpg)
+
 - 悬浮菜单
 
 ![](https://github.com/cryer/hako/raw/master/docs/res/floatting_menu.jpg)
