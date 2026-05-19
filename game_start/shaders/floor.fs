@@ -14,9 +14,19 @@ uniform sampler2D floorTexture;
 uniform vec3 lightPos;
 uniform vec3 viewPos;
 
+struct DirLight {
+    vec3 direction;
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+};
+uniform DirLight dirLight;
+
 // --- 新增：阴影贴图采样器 ---
 uniform sampler2DShadow shadowMap;
 uniform bool shadowOn;
+
+vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir, vec3 color, float shadow);
 
 // ==========================================
 // 阴影计算核心函数 (模型片段着色器逻辑完全一致)
@@ -87,6 +97,19 @@ void main()
     // --- 新增：应用阴影 ---
     // 同样，只有漫反射和高光受遮挡影响，环境光不受影响
     vec3 result = ambient + (1.0 - shadow) * (diffuse + specular);
+    result += CalcDirLight(dirLight, normal, viewDir, color, shadow);
 
     FragColor = vec4(result, 1.0);
+}
+
+vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir, vec3 color, float shadow)
+{
+    vec3 lightDir = normalize(-light.direction);
+    float diff = max(dot(normal, lightDir), 0.0);
+    vec3 reflectDir = reflect(-lightDir, normal);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
+    vec3 ambient = light.ambient * color;
+    vec3 diffuse = light.diffuse * diff * color;
+    vec3 specular = light.specular * spec * vec3(0.3);
+    return ambient + (1.0 - shadow) * (diffuse + specular);
 }

@@ -93,7 +93,8 @@ void Renderer::RenderShadowPass(
         for (auto& [modelName, matrices] : instancedGroups) {
             Model* model = ResourceManager::GetModel(modelName);
             if (!model) continue;
-            model->DrawInstanced(*instancedDepthShader, matrices, 0);
+            // 阴影没必要分LOD，直接用中间的LOD1近似即可
+            model->DrawInstanced(*instancedDepthShader, matrices, 1);
         }
     }
 
@@ -195,8 +196,8 @@ void Renderer::RenderMainPass(
         glActiveTexture(GL_TEXTURE10);
         glBindTexture(GL_TEXTURE_2D, depthMap);
         instancedShader->setInt("shadowMap", 10);
-
-        std::unordered_map<std::string, std::vector<glm::mat4>> instancedGroups;
+        // 使用3个桶分别装3个LOD的实例化model矩阵
+        std::unordered_map<std::string, std::vector<glm::mat4>> instancedGroups[3];
         for (auto obj : objects) {
             if (!obj->isVisible) continue;
             if (!obj->useInstancing || obj->instances.empty()) continue;
@@ -204,19 +205,31 @@ void Renderer::RenderMainPass(
             AABB worldAABB = obj->GetWorldAABB();
             if (!frustum.isBoxVisible(worldAABB)) continue;
 
-            auto& group = instancedGroups[obj->modelName];
-            group.insert(group.end(), obj->instances.begin(), obj->instances.end());
+            for (auto& mat : obj->instances) {
+                glm::vec3 pos(mat[3]);
+                float distance = glm::distance(camera.Position, pos);
+
+                int lod = 0;
+                if (distance > 20.0f) lod = 2;
+                else if (distance > 10.0f) lod = 1;
+
+                instancedGroups[lod][obj->modelName].push_back(mat);
+            }
+        }
+        // 分别渲染每个LOD的实例化
+        for (int lod = 0; lod < 3; lod++) {
+            for (auto& [modelName, matrices] : instancedGroups[lod]) {
+                if (matrices.empty()) continue;
+                Model* model = ResourceManager::GetModel(modelName);
+                if (!model) continue;
+                model->DrawInstanced(*instancedShader, matrices, lod);
+            }
         }
 
-        for (auto& [modelName, matrices] : instancedGroups) {
-            Model* model = ResourceManager::GetModel(modelName);
-            if (!model) continue;
-            model->DrawInstanced(*instancedShader, matrices, 0);
-        }
     }
 }
 
-void Renderer::RenderFloor(Camera& camera, glm::mat4 lightSpaceMatrix, glm::vec3 lightPos, bool shadowOn, float screenWidth, float screenHeight) {
+void Renderer::RenderFloor(Camera& camera, glm::mat4 lightSpaceMatrix, glm::vec3 lightPos, glm::vec3 sunDir, bool shadowOn, float screenWidth, float screenHeight) {
     Shader* floorShader = ResourceManager::GetShader("floor");
     floorShader->use();
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), screenWidth / screenHeight, 0.1f, 100.0f);
@@ -224,6 +237,10 @@ void Renderer::RenderFloor(Camera& camera, glm::mat4 lightSpaceMatrix, glm::vec3
     floorShader->setMatrix4fv("view", camera.GetViewMatrix());
     floorShader->setFloat3("viewPos", camera.Position);
     floorShader->setFloat3("lightPos", lightPos);
+    floorShader->setFloat3("dirLight.direction", sunDir);
+    floorShader->setFloat3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
+    floorShader->setFloat3("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
+    floorShader->setFloat3("dirLight.specular", 0.5f, 0.5f, 0.5f);
     floorShader->setMatrix4fv("lightSpaceMatrix", lightSpaceMatrix);
     floorShader->setBool("shadowOn", shadowOn);
 
@@ -252,7 +269,7 @@ void Renderer::RenderTerrainShadow(Terrain& terrain, const glm::mat4& lightSpace
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Renderer::RenderTerrain(Terrain& terrain, Camera& camera, glm::mat4 lightSpaceMatrix, glm::vec3 lightPos, bool shadowOn, float screenWidth, float screenHeight) {
+void Renderer::RenderTerrain(Terrain& terrain, Camera& camera, glm::mat4 lightSpaceMatrix, glm::vec3 lightPos, glm::vec3 sunDir, bool shadowOn, float screenWidth, float screenHeight) {
     Shader* terrainShader = ResourceManager::GetShader("terrain");
     terrainShader->use();
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), screenWidth / screenHeight, 0.1f, 100.0f);
@@ -260,6 +277,10 @@ void Renderer::RenderTerrain(Terrain& terrain, Camera& camera, glm::mat4 lightSp
     terrainShader->setMatrix4fv("view", camera.GetViewMatrix());
     terrainShader->setFloat3("viewPos", camera.Position);
     terrainShader->setFloat3("lightPos", lightPos);
+    terrainShader->setFloat3("dirLight.direction", sunDir);
+    terrainShader->setFloat3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
+    terrainShader->setFloat3("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
+    terrainShader->setFloat3("dirLight.specular", 0.5f, 0.5f, 0.5f);
     terrainShader->setMatrix4fv("lightSpaceMatrix", lightSpaceMatrix);
     terrainShader->setBool("shadowOn", shadowOn);
 
@@ -268,7 +289,7 @@ void Renderer::RenderTerrain(Terrain& terrain, Camera& camera, glm::mat4 lightSp
     terrainShader->setInt("shadowMap", 10);
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, ResourceManager::GetTexture("wood"));
+    glBindTexture(GL_TEXTURE_2D, ResourceManager::GetTexture("ground"));
     terrainShader->setInt("terrainTexture", 0);
 
     terrain.Draw();

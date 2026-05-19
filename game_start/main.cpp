@@ -35,6 +35,7 @@ int main() {
 
     // 3. 加载纹理与天空盒资源
     ResourceManager::LoadTexture("wood", "assets/wall.jpg");
+    ResourceManager::LoadTexture("ground", "assets/ground.jpg");
     ResourceManager::LoadTexture("youtube", "assets/youtube.png");
     ResourceManager::LoadTexture("exit", "assets/exit.png");
     ResourceManager::LoadTexture("github", "assets/github.jpg");

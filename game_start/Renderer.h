@@ -37,7 +37,8 @@ public:
 
     void RenderFloor(Camera& camera, 
                     glm::mat4 lightSpaceMatrix, 
-                    glm::vec3 lightPos, 
+                    glm::vec3 lightPos,
+                    glm::vec3 sunDir,
                     bool shadowOn, 
                     float screenWidth, 
                     float screenHeight);
@@ -49,6 +50,7 @@ public:
                        Camera& camera,
                        glm::mat4 lightSpaceMatrix,
                        glm::vec3 lightPos,
+                       glm::vec3 sunDir,
                        bool shadowOn,
                        float screenWidth,
                        float screenHeight);

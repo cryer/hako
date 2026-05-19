@@ -5,6 +5,7 @@
 #include <imgui_impl_opengl3.h>
 #include <algorithm>
 #include <execution>
+#include <unordered_map>
 
 #include "Game.h"
 #include "ResourceManager.h"
@@ -259,7 +260,7 @@ void Game::SetupForLevel() {
             Terrain::Config cfg;
             cfg.worldSize  = 200.0f;
             cfg.resolution = 256;
-            cfg.maxHeight  = 5.0f;
+            cfg.maxHeight  = 8.0f;
             cfg.noiseScale = 0.02f;
             cfg.octaves    = 4;
             cfg.seed       = 42;
@@ -267,31 +268,110 @@ void Game::SetupForLevel() {
             useTerrain = true;
         }
 
-        srand(42);
-        GameObject* instTest = new GameObject("InstancedGrass", "grass", "instanced_standard");
-        instTest->useInstancing = true;
-        instTest->castShadow = false;
-        instTest->hasCollision = false;
-
-        int cols = 20;
-        int rows = 10;
-        float spacing = 2.0f;
-        float startX = -(cols * spacing) / 2.0f;
-        float startZ = -(rows * spacing) / 2.0f;
-        for (int i = 0; i < cols; i++) {
-            for (int j = 0; j < rows; j++) {
-                glm::mat4 mat(1.0f);
-                float ox = startX + i * spacing + (rand() % 100 - 50) / 50.0f * 0.5f;
-                float oz = startZ + j * spacing + (rand() % 100 - 50) / 50.0f * 0.5f;
-                float oy = terrain.GetHeight(ox, oz);
-                mat = glm::translate(mat, glm::vec3(ox, oy, oz));
-                mat = glm::rotate(mat, glm::radians((float)(rand() % 360)), glm::vec3(0.0f, 1.0f, 0.0f));
-                float s = 0.6f + (rand() % 100) / 100.0f * 0.6f;
-                mat = glm::scale(mat, glm::vec3(s));
-                instTest->instances.push_back(mat);
+        // ====== 草地自动生成 ======
+        {
+            GrassManager::Config gcfg;
+            gcfg.density        = 0.1f;
+            gcfg.slopeThreshold = 0.55f;
+            gcfg.stepSize       = 0.8f;
+            gcfg.jitterRadius   = 0.35f;
+            gcfg.minScale       = 1.4f;
+            gcfg.maxScale       = 2.5f;
+            gcfg.seed           = 42;
+            grass.Generate(terrain, gcfg);
+            if (grass.GetObject()) {
+                Level::Instance().AddObject(grass.GetObject());
             }
+            std::cout << "Grass instances: " << grass.GetInstanceCount() << std::endl;
         }
-        Level::Instance().AddObject(instTest);
+
+        // ====== 树木随机放置（网格防重叠） ======
+        {
+            float cellSize = 10.0f;
+            float halfSize = terrain.config.worldSize * 0.5f;
+            int gridRes = (int)(terrain.config.worldSize / cellSize);
+
+            std::vector<std::vector<bool>> occupied(gridRes, std::vector<bool>(gridRes, false));
+
+            struct TreeDef { std::string model; float weight; float minS; float maxS; };
+            std::vector<TreeDef> treeDefs = {
+                {"greenTree", 0.35f, 0.8f, 1.3f},
+                {"redTree",   0.25f, 0.8f, 1.3f},
+                {"tree",      0.15f, 0.8f, 1.3f},
+                {"greenTree", 0.15f, 0.8f, 1.3f},
+                {"redTree",   0.10f, 0.8f, 1.3f},
+            };
+
+            std::unordered_map<std::string, GameObject*> treeMap;
+            auto ensureObj = [&](const std::string& modelName) -> GameObject* {
+                auto it = treeMap.find(modelName);
+                if (it != treeMap.end()) return it->second;
+                auto* obj = new GameObject("Trees_" + modelName, modelName, "instanced_standard");
+                obj->useInstancing = true;
+                obj->castShadow = true;
+                obj->hasCollision = false;
+                obj->localAABB.min = glm::vec3(-halfSize, -10.0f, -halfSize);
+                obj->localAABB.max = glm::vec3(halfSize, 30.0f, halfSize);
+                treeMap[modelName] = obj;
+                return obj;
+            };
+
+            srand(43);
+
+            for (int gx = 0; gx < gridRes; gx++) {
+                for (int gz = 0; gz < gridRes; gz++) {
+                    if (occupied[gx][gz]) continue;
+
+                    if ((rand() % 1000) / 1000.0f > 0.35f) continue;
+
+                    float cx = -halfSize + (gx + 0.5f) * cellSize;
+                    float cz = -halfSize + (gz + 0.5f) * cellSize;
+                    float ox = cx + ((rand() % 1000) / 500.0f - 1.0f) * cellSize * 0.35f;
+                    float oz = cz + ((rand() % 1000) / 500.0f - 1.0f) * cellSize * 0.35f;
+
+                    float h = terrain.GetHeight(ox, oz);
+                    glm::vec3 n = terrain.GetNormal(ox, oz);
+                    if (glm::dot(n, glm::vec3(0.0f, 1.0f, 0.0f)) < 0.7f) continue;
+
+                    // 标记占用格子（自身 + 8邻域）
+                    for (int dx = -1; dx <= 1; dx++) {
+                        for (int dz = -1; dz <= 1; dz++) {
+                            int nx = gx + dx, nz = gz + dz;
+                            if (nx >= 0 && nx < gridRes && nz >= 0 && nz < gridRes)
+                                occupied[nx][nz] = true;
+                        }
+                    }
+
+                    // 加权随机选树种
+                    float r = (rand() % 1000) / 1000.0f;
+                    float acc = 0.0f;
+                    int picked = 0;
+                    for (int t = 0; t < (int)treeDefs.size(); t++) {
+                        acc += treeDefs[t].weight;
+                        if (r <= acc) { picked = t; break; }
+                    }
+
+                    glm::mat4 mat(1.0f);
+                    mat = glm::translate(mat, glm::vec3(ox, h, oz));
+                    mat = glm::rotate(mat, glm::radians((float)(rand() % 360)), glm::vec3(0.0f, 1.0f, 0.0f));
+                    float s = treeDefs[picked].minS + (rand() % 1000) / 1000.0f * (treeDefs[picked].maxS - treeDefs[picked].minS);
+                    mat = glm::scale(mat, glm::vec3(s));
+
+                    ensureObj(treeDefs[picked].model)->instances.push_back(mat);
+                }
+            }
+
+            int totalTrees = 0;
+            for (auto& [name, obj] : treeMap) {
+                if (!obj->instances.empty()) {
+                    Level::Instance().AddObject(obj);
+                    totalTrees += (int)obj->instances.size();
+                } else {
+                    delete obj;
+                }
+            }
+            std::cout << "Tree instances: " << totalTrees << std::endl;
+        }
     } else {
         useTerrain = false;
     }
@@ -393,7 +473,7 @@ void Game::Run() {
 
 
         // ==========================================
-        // 每帧重建四叉树 (超级轻量，解决动态更新和编辑器拖动)
+        // 每帧重建四叉树
         // ==========================================
         sceneTree.Clear();
         for (auto obj : Level::Instance()._objects) {
@@ -543,7 +623,7 @@ void Game::Run() {
         
         glm::mat4 lightSpaceMatrix = glm::mat4(1.0f);
         if (shadowOn) {
-            glm::mat4 lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 1.0f, 20.0f);
+            glm::mat4 lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 1.0f, 60.0f);
             glm::mat4 lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
             lightSpaceMatrix = lightProjection * lightView;
             // 1. 生成阴影贴图
@@ -557,9 +637,9 @@ void Game::Run() {
         
         // 3. 其他环境渲染
         if (useTerrain) {
-            renderer->RenderTerrain(terrain, camera, lightSpaceMatrix, lightPos, shadowOn, (float)width, (float)height);
+            renderer->RenderTerrain(terrain, camera, lightSpaceMatrix, lightPos, sunDir, shadowOn, (float)width, (float)height);
         } else {
-            renderer->RenderFloor(camera, lightSpaceMatrix, lightPos, shadowOn, (float)width, (float)height);
+            renderer->RenderFloor(camera, lightSpaceMatrix, lightPos, sunDir, shadowOn, (float)width, (float)height);
         }
         renderer->RenderLightCube(camera, lightPos, dirLightPos,(float)width, (float)height);
         renderer->RenderSkybox(camera, (float)width, (float)height);

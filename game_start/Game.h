@@ -16,6 +16,7 @@
 #include "FpsLimiter.h"
 #include "AudioManager.h"
 #include "Terrain.h"
+#include "GrassManager.h"
 
 class Game {
 public:
@@ -29,6 +30,7 @@ public:
     Frustum frustum;
     QuadTree sceneTree;
     Terrain terrain;
+    GrassManager grass;
 
     FrameLimiter limiter;
     AudioManager audio;
