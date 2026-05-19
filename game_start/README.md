@@ -15,7 +15,7 @@
 
 - 随机噪声地图生成系统
 
-![](https://github.com/cryer/hako/raw/master/docs/res/terrain.jpg)
+![](https://github.com/cryer/hako/raw/master/docs/res/terrian.jpg)
 
 - 悬浮菜单
 
@@ -30,5 +30,6 @@
 - 四叉树空间划分
 - 可视距离渲染剔除
 - 批处理
+- 实例化渲染
 - GPU顶点缓存优化 + 物理顺序重排
 - LOD
