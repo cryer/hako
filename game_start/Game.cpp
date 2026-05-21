@@ -288,6 +288,21 @@ void Game::ProcessInput() {
             }
         }
     }
+
+    // 发射物理球体
+    if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS && projectileCooldown <= 0.0f) {
+        Projectile p;
+        p.position = camera.Position + camera.Front * 0.5f;
+        p.velocity = camera.Front * 30.0f;
+        p.radius = 0.25f;
+        p.restitution = 0.5f;
+        p.gravity = 20.0f;
+        p.airDrag = 0.3f;
+        p.rollFriction = 4.0f;
+        p.lifetime = projectileLife;
+        projectiles.push_back(p);
+        projectileCooldown = PROJECTILE_COOLDOWN_TIME;
+    }
 }
 
 void Game::SetupForLevel() {
@@ -673,6 +688,105 @@ void Game::Run() {
             }
         }
 
+        // ==========================================
+        // 物理球体更新
+        // ==========================================
+        if (projectileCooldown > 0.0f)
+            projectileCooldown -= deltaTime;
+
+        for (auto& p : projectiles) {
+            p.age += deltaTime;
+
+            if (p.state == ProjectileState::STOPPED) continue;
+
+            p.velocity.y -= p.gravity * deltaTime;
+
+            float dragFactor = 1.0f - p.airDrag * deltaTime;
+            if (dragFactor < 0.0f) dragFactor = 0.0f;
+            p.velocity *= dragFactor;
+
+            if (p.state == ProjectileState::ROLLING) {
+                float frictionFactor = 1.0f - p.rollFriction * deltaTime;
+                if (frictionFactor < 0.0f) frictionFactor = 0.0f;
+                p.velocity.x *= frictionFactor;
+                p.velocity.z *= frictionFactor;
+            }
+
+            p.position += p.velocity * deltaTime;
+
+            AABB projectileBox = p.GetAABB();
+            p.onGround = false;
+
+            Rect2D pRect = { projectileBox.min.x, projectileBox.min.z, projectileBox.max.x, projectileBox.max.z };
+            std::vector<GameObject*> nearProj;
+            sceneTree.Query(pRect, nearProj);
+
+            for (auto* obj : nearProj) {
+                if (!obj->hasCollision) continue;
+                CollisionInfo ci = ResolveProjectileCollision(projectileBox, obj->GetWorldAABB());
+                if (ci.hit) {
+                    float vn = glm::dot(p.velocity, ci.normal);
+                    if (vn < 0.0f)
+                        p.velocity -= (1.0f + p.restitution) * vn * ci.normal;
+                    if (ci.normal.y > 0.5f)
+                        p.onGround = true;
+                }
+            }
+
+            if (useTerrain) {
+                float groundY = terrain.GetHeight(p.position.x, p.position.z);
+                if (projectileBox.min.y < groundY) {
+                    float h = projectileBox.max.y - projectileBox.min.y;
+                    projectileBox.min.y = groundY;
+                    projectileBox.max.y = projectileBox.min.y + h;
+                    glm::vec3 groundNormal = glm::vec3(0.0f, 1.0f, 0.0f);
+                    float vn = glm::dot(p.velocity, groundNormal);
+                    if (vn < 0.0f)
+                        p.velocity -= (1.0f + p.restitution) * vn * groundNormal;
+                    p.onGround = true;
+                }
+            } else {
+                CollisionInfo ci = ResolveProjectileCollision(projectileBox, floorCollider);
+                if (ci.hit && ci.normal.y > 0.5f) {
+                    float vn = glm::dot(p.velocity, ci.normal);
+                    if (vn < 0.0f)
+                        p.velocity -= (1.0f + p.restitution) * vn * ci.normal;
+                    p.onGround = true;
+                }
+            }
+
+            p.position = (projectileBox.min + projectileBox.max) * 0.5f;
+
+            if (p.onGround && p.state == ProjectileState::BOUNCING &&
+                -p.velocity.y < 1.0f && glm::abs(p.velocity.y) < 2.0f) {
+                p.state = ProjectileState::ROLLING;
+                p.velocity.y = 0.0f;
+            }
+
+            if (p.state == ProjectileState::ROLLING) {
+                float xzSpeed = glm::length(glm::vec2(p.velocity.x, p.velocity.z));
+                if (xzSpeed < 0.3f) {
+                    p.state = ProjectileState::STOPPED;
+                    p.velocity = glm::vec3(0.0f);
+                }
+            }
+
+            // if (p.age > p.lifetime) {
+            //     p.state = ProjectileState::STOPPED;
+            // }
+        }
+        // 停止就移除(速度接近0或者大于生命周期都停止)
+        // projectiles.erase(
+        //     std::remove_if(projectiles.begin(), projectiles.end(),
+        //         [](const Projectile& p) { return p.state == ProjectileState::STOPPED; }),
+        //     projectiles.end());
+
+        // 生命结束才移除
+        projectiles.erase(
+            std::remove_if(projectiles.begin(), projectiles.end(),
+                [](const Projectile& p) { return p.age > p.lifetime; }),
+            projectiles.end());
+
 
         // 执行关卡切换（四叉树也应该重建一下）
         if (!levelToLoad.empty()) {
@@ -774,6 +888,15 @@ void Game::Run() {
         }
         renderer->RenderLightCube(camera, lightPos, dirLightPos,(float)width, (float)height);
         renderer->RenderSkybox(camera, (float)width, (float)height);
+
+        // 渲染物理球体
+        if (!projectiles.empty()) {
+            std::vector<glm::mat4> projModels;
+            for (const auto& p : projectiles)
+                projModels.push_back(p.GetModelMatrix());
+            renderer->RenderSpheres(projModels, glm::vec3(1.0f, 0.5f, 0.1f), camera, (float)width, (float)height);
+        }
+
         if (showBox){
             renderer->RenderAABBs(visibleObjects, camera, (float)width, (float)height);
         }

@@ -18,6 +18,7 @@
 #include "Terrain.h"
 #include "GrassManager.h"
 #include "WaterManager.h"
+#include "Projectile.h"
 
 class Game {
 public:
@@ -74,6 +75,11 @@ public:
     glm::vec3 playerVelocity = glm::vec3(0.0f);
     bool playerOnGround = false;
     AABB floorCollider;
+
+    std::vector<Projectile> projectiles;
+    float projectileCooldown = 0.0f;
+    float projectileLife = 10.0f;
+    const float PROJECTILE_COOLDOWN_TIME = 0.3f;
 
     Game(int w, int h);
     ~Game();

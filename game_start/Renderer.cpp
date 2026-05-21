@@ -31,6 +31,7 @@ void Renderer::InitShadowMap() {
 }
 
 void Renderer::InitPrimitives() {
+    InitSphere();
     // 省略原来的大段数组声明，此处用原数组直接填充
     float skyboxVertices[] = { -1.0f,  1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f,  1.0f, -1.0f, -1.0f,  1.0f, -1.0f, -1.0f, -1.0f,  1.0f, -1.0f, -1.0f, -1.0f, -1.0f,  1.0f, -1.0f, -1.0f,  1.0f, -1.0f, -1.0f,  1.0f,  1.0f, -1.0f, -1.0f,  1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f,  1.0f, 1.0f,  1.0f,  1.0f, 1.0f,  1.0f,  1.0f, 1.0f,  1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f,  1.0f, -1.0f,  1.0f,  1.0f, 1.0f,  1.0f,  1.0f, 1.0f,  1.0f,  1.0f, 1.0f, -1.0f,  1.0f, -1.0f, -1.0f,  1.0f, -1.0f,  1.0f, -1.0f, 1.0f,  1.0f, -1.0f, 1.0f,  1.0f,  1.0f, 1.0f,  1.0f,  1.0f, -1.0f,  1.0f,  1.0f, -1.0f,  1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f,  1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f,  1.0f, 1.0f, -1.0f,  1.0f };
     float planeVertices[] = { 30.0f, -0.5f,  30.0f,  0.0f, 1.0f, 0.0f,  30.0f,  0.0f, -30.0f, -0.5f, -30.0f,  0.0f, 1.0f, 0.0f,   0.0f, 30.0f, -30.0f, -0.5f,  30.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f, 30.0f, -0.5f,  30.0f,  0.0f, 1.0f, 0.0f,  30.0f,  0.0f, 30.0f, -0.5f, -30.0f,  0.0f, 1.0f, 0.0f,  30.0f, 30.0f, -30.0f, -0.5f, -30.0f,  0.0f, 1.0f, 0.0f,  0.0f, 30.0f };
@@ -55,6 +56,66 @@ void Renderer::InitPrimitives() {
     glBindVertexArray(lightCubeVAO); glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0); glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+}
+
+void Renderer::InitSphere() {
+    const int stacks = 14;
+    const int sectors = 18;
+    const float PI = 3.14159265359f;
+
+    std::vector<float> sphereVertices;
+    std::vector<unsigned int> sphereIndices;
+
+    for (int i = 0; i <= stacks; i++) {
+        float theta = PI * (float)i / stacks;
+        float sinTheta = sin(theta);
+        float cosTheta = cos(theta);
+        for (int j = 0; j < sectors; j++) {
+            float phi = 2.0f * PI * (float)j / sectors;
+            float x = sinTheta * cos(phi);
+            float y = cosTheta;
+            float z = sinTheta * sin(phi);
+            sphereVertices.push_back(x);
+            sphereVertices.push_back(y);
+            sphereVertices.push_back(z);
+        }
+    }
+
+    for (int i = 0; i < stacks; i++) {
+        for (int j = 0; j < sectors; j++) {
+            unsigned int k1 = i * sectors + j;
+            unsigned int k2 = i * sectors + (j + 1) % sectors;
+            unsigned int k3 = (i + 1) * sectors + j;
+            unsigned int k4 = (i + 1) * sectors + (j + 1) % sectors;
+
+            sphereIndices.push_back(k1);
+            sphereIndices.push_back(k3);
+            sphereIndices.push_back(k2);
+
+            sphereIndices.push_back(k2);
+            sphereIndices.push_back(k3);
+            sphereIndices.push_back(k4);
+        }
+    }
+
+    sphereIndexCount = (unsigned int)sphereIndices.size();
+
+    glGenVertexArrays(1, &sphereVAO);
+    glGenBuffers(1, &sphereVBO);
+    glGenBuffers(1, &sphereEBO);
+
+    glBindVertexArray(sphereVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
+    glBufferData(GL_ARRAY_BUFFER, sphereVertices.size() * sizeof(float), sphereVertices.data(), GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sphereEBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sphereIndices.size() * sizeof(unsigned int), sphereIndices.data(), GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+
+    glBindVertexArray(0);
 }
 
 void Renderer::RenderShadowPass(
@@ -395,6 +456,7 @@ void Renderer::RenderLightCube(Camera& camera, glm::vec3 lightPos, glm::vec3 sun
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), screenWidth / screenHeight, 0.1f, 100.0f);
     lightShader->setMatrix4fv("view", camera.GetViewMatrix());
     lightShader->setMatrix4fv("projection", projection);
+    lightShader->setFloat3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
     
 
     glm::mat4 model = glm::translate(glm::mat4(1.0f), lightPos);
@@ -419,6 +481,7 @@ void Renderer::RenderAABBs(const std::vector<GameObject*>& objects,
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), screenWidth / screenHeight, 0.1f, 100.0f);
     boxShader->setMatrix4fv("view", camera.GetViewMatrix());
     boxShader->setMatrix4fv("projection", projection);
+    boxShader->setFloat3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
 
     // 开启线框绘制模式
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -444,5 +507,25 @@ void Renderer::RenderAABBs(const std::vector<GameObject*>& objects,
     // 关闭线框绘制模式（即设置填充模式）
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+}
+
+void Renderer::RenderSpheres(const std::vector<glm::mat4>& models,
+                              const glm::vec3& color,
+                              Camera& camera,
+                              float screenWidth,
+                              float screenHeight) {
+    Shader* lightShader = ResourceManager::GetShader("light");
+    lightShader->use();
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), screenWidth / screenHeight, 0.1f, 100.0f);
+    lightShader->setMatrix4fv("view", camera.GetViewMatrix());
+    lightShader->setMatrix4fv("projection", projection);
+    lightShader->setFloat3("lightColor", color);
+
+    glBindVertexArray(sphereVAO);
+    for (const auto& model : models) {
+        lightShader->setMatrix4fv("model", model);
+        glDrawElements(GL_TRIANGLES, sphereIndexCount, GL_UNSIGNED_INT, 0);
+    }
+    glBindVertexArray(0);
 }
 

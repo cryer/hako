@@ -16,9 +16,12 @@ private:
     unsigned int skyboxVAO, skyboxVBO;
     unsigned int planeVAO, planeVBO;
     unsigned int lightCubeVAO, VBO;
+    unsigned int sphereVAO, sphereVBO, sphereEBO;
+    unsigned int sphereIndexCount;
 
     void InitPrimitives();
     void InitShadowMap();
+    void InitSphere();
 
 public:
     Renderer();
@@ -78,4 +81,10 @@ public:
                     Camera& camera, 
                     float screenWidth, 
                     float screenHeight);
+
+    void RenderSpheres(const std::vector<glm::mat4>& models,
+                       const glm::vec3& color,
+                       Camera& camera,
+                       float screenWidth,
+                       float screenHeight);
 };
