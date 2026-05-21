@@ -15,7 +15,7 @@
 
 - 随机噪声地图生成系统
 
-![](https://github.com/cryer/hako/raw/master/docs/res/terrian2.jpg)
+![](https://github.com/cryer/hako/raw/master/docs/res/terrian3.jpg)
 
 - 悬浮菜单
 
