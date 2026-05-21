@@ -2,6 +2,22 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <cfloat>
+
+static bool PointInPolygon2D(float x, float z, const std::vector<glm::vec2>& poly) {
+    int n = (int)poly.size();
+    if (n < 3) return false;
+    bool inside = false;
+    for (int i = 0, j = n - 1; i < n; j = i++) {
+        float xi = poly[i].x, zi = poly[i].y;
+        float xj = poly[j].x, zj = poly[j].y;
+        if (((zi > z) != (zj > z)) &&
+            (x < (xj - xi) * (z - zi) / (zj - zi) + xi)) {
+            inside = !inside;
+        }
+    }
+    return inside;
+}
 
 static inline uint32_t HashInts(int x, int z, int seed) {
     uint32_t n = (uint32_t)(x * 1619 + z * 31337 + seed * 7907);
@@ -94,6 +110,52 @@ void Terrain::BuildMesh() {
             verts[v + 5] = 0.0f;
             verts[v + 6] = x / (float)(res - 1) * 30.0f;
             verts[v + 7] = z / (float)(res - 1) * 30.0f;
+        }
+    }
+
+    if (config.pool.enabled && config.pool.vertices.size() >= 3) {
+        for (int z = 0; z < res; z++) {
+            for (int x = 0; x < res; x++) {
+                int idx = z * res + x;
+                float wx = -halfSize + x * stepWS;
+                float wz = -halfSize + z * stepWS;
+
+                if (PointInPolygon2D(wx, wz, config.pool.vertices)) {
+                    float minDist = FLT_MAX;
+                    int nv = (int)config.pool.vertices.size();
+                    for (int i = 0; i < nv; i++) {
+                        const glm::vec2& a = config.pool.vertices[i];
+                        const glm::vec2& b = config.pool.vertices[(i + 1) % nv];
+                        glm::vec2 ab = b - a;
+                        glm::vec2 ap = glm::vec2(wx, wz) - a;
+                        float t = glm::dot(ap, ab) / glm::dot(ab, ab);
+                        t = glm::clamp(t, 0.0f, 1.0f);
+                        glm::vec2 closest = a + ab * t;
+                        float dist = glm::length(ap - (ab * t));
+                        if (dist < minDist) minDist = dist;
+                    }
+
+                    float targetHeight = config.pool.floorHeight;
+                    float originalHeight = heightmap[idx];
+                    float radius = config.pool.edgeRadius;
+
+                    if (minDist >= radius) {
+                        heightmap[idx] = targetHeight;
+                    } else {
+                        float t = minDist / radius;
+                        float smooth = t * t * (3.0f - 2.0f * t);
+                        heightmap[idx] = glm::mix(targetHeight, originalHeight, smooth);
+                    }
+                }
+            }
+        }
+
+        for (int z = 0; z < res; z++) {
+            for (int x = 0; x < res; x++) {
+                int idx = z * res + x;
+                int v = idx * 8;
+                verts[v + 1] = heightmap[idx];
+            }
         }
     }
 
@@ -212,6 +274,11 @@ glm::vec3 Terrain::GetNormal(float worldX, float worldZ) const {
                      + n01 * (1.0f - tx) * tz
                      + n11 * tx * tz;
     return glm::normalize(result);
+}
+
+bool Terrain::IsInsidePool(float worldX, float worldZ) const {
+    if (!config.pool.enabled || config.pool.vertices.size() < 3) return false;
+    return PointInPolygon2D(worldX, worldZ, config.pool.vertices);
 }
 
 void Terrain::Draw() {

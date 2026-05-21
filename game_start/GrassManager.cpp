@@ -29,6 +29,8 @@ void GrassManager::Generate(const Terrain& terrain, const Config& cfg) {
             float jx = x + distJitter(rng) * cfg.jitterRadius;
             float jz = z + distJitter(rng) * cfg.jitterRadius;
 
+            if (terrain.IsInsidePool(jx, jz)) continue;
+
             float h = terrain.GetHeight(jx, jz);
 
             glm::vec3 n = terrain.GetNormal(jx, jz);

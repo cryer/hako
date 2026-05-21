@@ -270,22 +270,51 @@ void Game::SetupForLevel() {
                 .seed       = 42
             };
 
+            cfg.pool.enabled = true;
+            cfg.pool.vertices = {
+                                    {28.0f, 28.0f},
+                                    {36.0f, 26.0f},
+                                    {42.0f, 30.0f},
+                                    {46.0f, 36.0f},
+                                    {44.0f, 42.0f},
+                                    {38.0f, 46.0f},
+                                    {30.0f, 44.0f},
+                                    {24.0f, 38.0f},
+                                    {22.0f, 32.0f},
+                                    {26.0f, 28.0f}
+                                };
+            cfg.pool.floorHeight = 1.5f;
+            cfg.pool.edgeRadius = 2.5f;
+
             terrain.Generate(cfg);
             useTerrain = true;
         }
 
+        // ====== 水面生成 ======
+        {
+            WaterManager::Config wcfg{
+                .poolVertices = {
+                                    {28.0f, 28.0f},
+                                    {36.0f, 26.0f},
+                                    {42.0f, 30.0f},
+                                    {46.0f, 36.0f},
+                                    {44.0f, 42.0f},
+                                    {38.0f, 46.0f},
+                                    {30.0f, 44.0f},
+                                    {24.0f, 38.0f},
+                                    {22.0f, 32.0f},
+                                    {26.0f, 28.0f}
+                                },
+                .waterHeight = 3.3f,
+                .gridRes = 64
+            };
+  
+            water.Generate(wcfg);
+            std::cout << "Water pool generated." << std::endl;
+        }
+
         // ====== 草地自动生成 ======
         {
-            // GrassManager::Config gcfg;
-            // gcfg.density        = 0.2f;
-            // gcfg.slopeThreshold = 0.55f;
-            // gcfg.stepSize       = 0.8f;
-            // gcfg.jitterRadius   = 0.35f;
-            // gcfg.minScale       = 5.4f;
-            // gcfg.maxScale       = 7.5f;
-            // gcfg.seed           = 42;
-
-            //C++20指定初始化器，直接初始化，不用一次构造多次赋值
             GrassManager::Config gcfg{
                 .density        = 0.2f,
                 .slopeThreshold = 0.55f,
@@ -346,6 +375,8 @@ void Game::SetupForLevel() {
                     float cz = -halfSize + (gz + 0.5f) * cellSize;
                     float ox = cx + distJitter(rng) * cellSize * 0.35f;
                     float oz = cz + distJitter(rng) * cellSize * 0.35f;
+
+                    if (terrain.IsInsidePool(ox, oz)) continue;
 
                     float h = terrain.GetHeight(ox, oz);
                     glm::vec3 n = terrain.GetNormal(ox, oz);
@@ -656,6 +687,7 @@ void Game::Run() {
         // 3. 其他环境渲染
         if (useTerrain) {
             renderer->RenderTerrain(terrain, camera, lightSpaceMatrix, lightPos, sunDir, shadowOn, (float)width, (float)height);
+            renderer->RenderWater(water, camera, lightSpaceMatrix, lightPos, sunDir, shadowOn, (float)width, (float)height);
         } else {
             renderer->RenderFloor(camera, lightSpaceMatrix, lightPos, sunDir, shadowOn, (float)width, (float)height);
         }

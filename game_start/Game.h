@@ -17,6 +17,7 @@
 #include "AudioManager.h"
 #include "Terrain.h"
 #include "GrassManager.h"
+#include "WaterManager.h"
 
 class Game {
 public:
@@ -31,6 +32,7 @@ public:
     QuadTree sceneTree;
     Terrain terrain;
     GrassManager grass;
+    WaterManager water;
 
     FrameLimiter limiter;
     AudioManager audio;

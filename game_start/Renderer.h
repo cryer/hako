@@ -6,6 +6,7 @@
 #include "AABB.h"
 #include "Frustum.h"
 #include "Terrain.h"
+#include "WaterManager.h"
 
 class Renderer {
 private:
@@ -36,6 +37,14 @@ public:
                         float windStrenth = 0.55f,
                         float windSpeed = 1.2f);
 
+    void RenderWater(WaterManager& water,
+                     Camera& camera,
+                     glm::mat4 lightSpaceMatrix,
+                     glm::vec3 lightPos,
+                     glm::vec3 sunDir,
+                     bool shadowOn,
+                     float screenWidth,
+                     float screenHeight);
 
     void RenderFloor(Camera& camera, 
                     glm::mat4 lightSpaceMatrix, 

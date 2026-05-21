@@ -47,7 +47,8 @@ add_executable(game
 	QuadTree.cpp
 	AudioManager.cpp
 	Terrain.cpp
-	GrassManager.cpp)
+	GrassManager.cpp
+	WaterManager.cpp)
 
 target_link_libraries(game PRIVATE glad::glad glfw glm::glm assimp::assimp imgui::imgui meshoptimizer::meshoptimizer  ImGuiFileDialog winmm)
 

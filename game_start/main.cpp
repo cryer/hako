@@ -33,6 +33,7 @@ int main() {
     ResourceManager::LoadShader("instanced_depth", "shaders/instanced_depth.vs", "shaders/depth_shader.fs");
     ResourceManager::LoadShader("terrain", "shaders/terrain.vs", "shaders/terrain.fs");
     ResourceManager::LoadShader("grass", "shaders/grass.vs", "shaders/model_load.fs");
+    ResourceManager::LoadShader("water", "shaders/water.vs", "shaders/water.fs");
 
     // 3. 加载纹理与天空盒资源
     ResourceManager::LoadTexture("wood", "assets/wall.jpg");
@@ -49,6 +50,12 @@ int main() {
         "assets/skybox/sea/right.jpg", "assets/skybox/sea/left.jpg",
         "assets/skybox/sea/top.jpg", "assets/skybox/sea/bottom.jpg",
         "assets/skybox/sea/front.jpg", "assets/skybox/sea/back.jpg"
+    });
+
+    ResourceManager::LoadCubemap("waterCubemap", {
+        "assets/skybox/water/right.jpg", "assets/skybox/water/left.jpg",
+        "assets/skybox/water/top.jpg", "assets/skybox/water/bottom.jpg",
+        "assets/skybox/water/front.jpg", "assets/skybox/water/back.jpg"
     });
 
     // 4. 加载 3D 模型

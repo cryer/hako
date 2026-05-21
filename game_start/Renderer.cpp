@@ -336,6 +336,41 @@ void Renderer::RenderTerrain(Terrain& terrain, Camera& camera, glm::mat4 lightSp
     terrain.Draw();
 }
 
+void Renderer::RenderWater(WaterManager& water, Camera& camera, glm::mat4 lightSpaceMatrix, glm::vec3 lightPos, glm::vec3 sunDir, bool shadowOn, float screenWidth, float screenHeight) {
+    if (water.indexCount == 0) return;
+
+    Shader* waterShader = ResourceManager::GetShader("water");
+    waterShader->use();
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), screenWidth / screenHeight, 0.1f, 100.0f);
+    waterShader->setMatrix4fv("projection", projection);
+    waterShader->setMatrix4fv("view", camera.GetViewMatrix());
+    waterShader->setFloat3("viewPos", camera.Position);
+    waterShader->setFloat3("lightPos", lightPos);
+    waterShader->setFloat3("sunDir", sunDir);
+    waterShader->setMatrix4fv("lightSpaceMatrix", lightSpaceMatrix);
+    waterShader->setBool("shadowOn", shadowOn);
+
+    float curTime = (float)glfwGetTime();
+    waterShader->setFloat("time", curTime);
+
+    glActiveTexture(GL_TEXTURE10);
+    glBindTexture(GL_TEXTURE_2D, depthMap);
+    waterShader->setInt("shadowMap", 10);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, ResourceManager::GetTexture("waterCubemap"));
+    waterShader->setInt("skybox", 0);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDepthMask(GL_FALSE);
+
+    water.Draw();
+
+    glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
+}
+
 void Renderer::RenderSkybox(Camera& camera, float screenWidth, float screenHeight) {
     glDepthFunc(GL_LEQUAL);
     Shader* skyboxShader = ResourceManager::GetShader("skybox");
