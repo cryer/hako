@@ -6,7 +6,7 @@
 class WaterManager {
 public:
     struct Config {
-        std::vector<glm::vec2> poolVertices;  // polygon outline in XZ
+        std::vector<glm::vec2> poolVertices; // xz轴的多边形轮廓
         float waterHeight = 0.0f;
         int gridRes = 64;
     };

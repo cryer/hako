@@ -224,6 +224,9 @@ bool Game::Init(const char* title) {
     // 初始化渲染器
     renderer = std::make_unique<Renderer>();
 
+    // 初始化地板碰撞体 (Y=-0.5 表面, 30x30范围)
+    floorCollider = AABB(glm::vec3(-30.0f, -1.0f, -30.0f), glm::vec3(30.0f, -0.5f, 30.0f));
+
     // if (!audio.init()) {
     //     std::cerr << "Running without audio.\n";
     // }
@@ -242,10 +245,39 @@ void Game::ProcessInput() {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) camera.ProcessKeyboard(FORWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) camera.ProcessKeyboard(BACKWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) camera.ProcessKeyboard(LEFT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) camera.ProcessKeyboard(RIGHT, deltaTime);
+    if (godMode) {
+        // 上帝模式：自由飞行
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) camera.ProcessKeyboard(FORWARD, deltaTime);
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) camera.ProcessKeyboard(BACKWARD, deltaTime);
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) camera.ProcessKeyboard(LEFT, deltaTime);
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) camera.ProcessKeyboard(RIGHT, deltaTime);
+    } else {
+        // 物理模式：水平面移动 + 跳跃
+        glm::vec3 moveDir(0.0f);
+        glm::vec3 frontXZ = glm::vec3(camera.Front.x, 0.0f, camera.Front.z);
+        glm::vec3 rightXZ = glm::vec3(camera.Right.x, 0.0f, camera.Right.z);
+        if (glm::length(frontXZ) > 0.001f) frontXZ = glm::normalize(frontXZ);
+        if (glm::length(rightXZ) > 0.001f) rightXZ = glm::normalize(rightXZ);
+
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) moveDir += frontXZ;
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) moveDir -= frontXZ;
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) moveDir -= rightXZ;
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) moveDir += rightXZ;
+
+        if (glm::length(moveDir) > 0.0f) {
+            moveDir = glm::normalize(moveDir);
+            playerVelocity.x = moveDir.x * camera.MovementSpeed;
+            playerVelocity.z = moveDir.z * camera.MovementSpeed;
+        } else {
+            playerVelocity.x = 0.0f;
+            playerVelocity.z = 0.0f;
+        }
+
+        // 跳跃
+        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && playerOnGround) {
+            playerVelocity.y = 10.0f;
+        }
+    }
 
     // 触发武器开火
     if (showGun && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
@@ -269,7 +301,7 @@ void Game::SetupForLevel() {
                 .octaves    = 4,
                 .seed       = 42
             };
-
+            // C++20聚合体的指定初始化，不支持嵌套，因此单独赋值
             cfg.pool.enabled = true;
             cfg.pool.vertices = {
                                     {28.0f, 28.0f},
@@ -283,8 +315,8 @@ void Game::SetupForLevel() {
                                     {22.0f, 32.0f},
                                     {26.0f, 28.0f}
                                 };
-            cfg.pool.floorHeight = 1.5f;
-            cfg.pool.edgeRadius = 2.5f;
+            cfg.pool.floorHeight = 1.5f; // 池底高度
+            cfg.pool.edgeRadius = 2.5f; // 边缘平滑过渡半径
 
             terrain.Generate(cfg);
             useTerrain = true;
@@ -293,6 +325,7 @@ void Game::SetupForLevel() {
         // ====== 水面生成 ======
         {
             WaterManager::Config wcfg{
+                // 水面多边形形状和上面水池地形一致，达到完整填充
                 .poolVertices = {
                                     {28.0f, 28.0f},
                                     {36.0f, 26.0f},
@@ -305,8 +338,8 @@ void Game::SetupForLevel() {
                                     {22.0f, 32.0f},
                                     {26.0f, 28.0f}
                                 },
-                .waterHeight = 3.3f,
-                .gridRes = 64
+                .waterHeight = 3.3f, // 水面高度
+                .gridRes = 64 // 水面网格res
             };
   
             water.Generate(wcfg);
@@ -434,6 +467,7 @@ void Game::Run() {
     static bool eKeyPressed = false;
     static bool qKeyPressed = false;
     static bool pKeyPressed = false;
+    static bool gKeyPressed = false;
 
     while (!glfwWindowShouldClose(window)) {
 
@@ -518,8 +552,22 @@ void Game::Run() {
                     pKeyPressed = true; // 这样长按就只会执行一次
                 }
             } else pKeyPressed = false;
-        }
 
+            // 切换上帝模式/物理模式 (G键)
+            if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS) {
+                if (!gKeyPressed) {
+                    godMode = !godMode;
+                    gKeyPressed = true;
+                    if (!godMode) {
+                        playerVelocity = glm::vec3(0.0f);
+                        terminal.AddLog("Switched to Physics Mode");
+                    } else {
+                        terminal.AddLog("Switched to God Mode");
+                    }
+                }
+            } else gKeyPressed = false;
+        }
+        
 
         // ==========================================
         // 每帧重建四叉树
@@ -529,8 +577,17 @@ void Game::Run() {
             sceneTree.Insert(obj);
         }
 
-        // 玩家碰撞box 直接每帧创建一个对象就好 没什么性能消耗
-        playerBox = AABB::CreateFromCenterAndSize(camera.Position, glm::vec3(0.5f,0.5f,0.5f));
+        // 物理模式：施加重力并应用速度
+        if (!godMode) {
+            playerVelocity.y -= 20.0f * deltaTime;
+            camera.Position += playerVelocity * deltaTime;
+        }
+
+        // 玩家碰撞box：摄像机位于box顶部(眼睛位置)，box向下延伸2.5单位
+        // 直接每帧创建一个对象就好 没什么性能消耗
+        playerBox = AABB(
+            glm::vec3(camera.Position.x - 0.25f, camera.Position.y - 2.5f, camera.Position.z - 0.25f),
+            glm::vec3(camera.Position.x + 0.25f, camera.Position.y, camera.Position.z + 0.25f));
 
         // ==========================================
         // 物理与触发器检测 (从遍历全部，变成只查附近)
@@ -588,7 +645,31 @@ void Game::Run() {
             利用反推box坐标更新camera相机位置
             */
             if(ResolveCollision(playerBox, obj->GetWorldAABB())){
-                 camera.Position  = (playerBox.min + playerBox.max) * 0.5f;
+                camera.Position = glm::vec3((playerBox.min.x + playerBox.max.x) * 0.5f, playerBox.max.y, (playerBox.min.z + playerBox.max.z) * 0.5f);
+            }
+        }
+
+        // 物理模式：地面碰撞检测
+        if (!godMode) {
+            playerOnGround = false;
+            if (useTerrain) {
+                // 地形碰撞：用高度场采样替代AABB
+                float terrainHeight = terrain.GetHeight(camera.Position.x, camera.Position.z);
+                if (playerBox.min.y < terrainHeight) {
+                    float boxHeight = playerBox.max.y - playerBox.min.y;
+                    playerBox.min.y = terrainHeight;
+                    playerBox.max.y = playerBox.min.y + boxHeight;
+                    camera.Position = glm::vec3((playerBox.min.x + playerBox.max.x) * 0.5f, playerBox.max.y, (playerBox.min.z + playerBox.max.z) * 0.5f);
+                    playerOnGround = true;
+                    playerVelocity.y = 0.0f;
+                }
+            } else {
+                // 平坦地板碰撞：使用AABB
+                if (ResolveCollision(playerBox, floorCollider)) {
+                    camera.Position = glm::vec3((playerBox.min.x + playerBox.max.x) * 0.5f, playerBox.max.y, (playerBox.min.z + playerBox.max.z) * 0.5f);
+                    playerOnGround = true;
+                    playerVelocity.y = 0.0f;
+                }
             }
         }
 

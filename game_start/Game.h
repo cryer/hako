@@ -70,6 +70,11 @@ public:
     float windStrenth = 0.55f;
     float windSpeed = 1.2f;
 
+    bool godMode = true;
+    glm::vec3 playerVelocity = glm::vec3(0.0f);
+    bool playerOnGround = false;
+    AABB floorCollider;
+
     Game(int w, int h);
     ~Game();
 
